@@ -1,19 +1,5 @@
 #include "prpengine.h"
 
-#include <algorithm>
-#include <vector>
-
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glext.h>
-/*#ifdef WIN32
-  #include <GL/wglext.h>
-#else
-  #include <GL/glxext.h>
-#endif
-*/
-
-
 
 void prpengine::AttemptToSetPlayerToLinkPointDefault(hsTArray<plKey> SObjects,camera &cam) {
     // let's get the linkinpointdefault (if we can)

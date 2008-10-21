@@ -2,13 +2,21 @@
 #define __PRPENGINE_H__
 
 
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <GL/glx.h>
+#endif
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glext.h>
 
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <map>
-
+#include <algorithm>
+#include <vector>
 
 #include "PRP/Surface/plMipmap.h"
 #include "Util/plString.h"
@@ -44,8 +52,6 @@ private:
 	GLuint* gl_texlist;
 	int getTextureIDFromKey(plKey key);
 	int loadHeadSpinMipmapTexture(plKey mipmapkey,int texname);
-
-	std::map<plKey, size_t> TexturesGLRef;
 	
 	std::vector<TextureObject*> TextureList;
 	std::vector<DrawableObject*> DrawableList;

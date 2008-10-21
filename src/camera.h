@@ -1,7 +1,10 @@
 #ifndef __CAMERA_H__
 #define __CAMERA_H__
 
-#include "windows.h"
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 #include <math.h>
 #include <GL/glu.h>
 
