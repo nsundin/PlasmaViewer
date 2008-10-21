@@ -86,7 +86,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)../bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"
@@ -163,47 +163,39 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\camera.cpp"
+			RelativePath="..\src\camera.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\camera.h"
+			RelativePath="..\src\camera.h"
 			>
 		</File>
 		<File
-			RelativePath=".\DrawableObject.cpp"
+			RelativePath="..\src\DrawableObject.h"
 			>
 		</File>
 		<File
-			RelativePath=".\DrawableObject.h"
+			RelativePath="..\src\PlasmaViewer.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\PlasmaViewer.cpp"
+			RelativePath="..\src\prpengine.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\prpengine.cpp"
+			RelativePath="..\src\prpengine.h"
 			>
 		</File>
 		<File
-			RelativePath=".\prpengine.h"
+			RelativePath="..\src\TextureObject.h"
 			>
 		</File>
 		<File
-			RelativePath=".\TextureObject.cpp"
+			RelativePath="..\src\viewer_fni.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\TextureObject.h"
-			>
-		</File>
-		<File
-			RelativePath=".\viewer_fni.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\viewer_fni.h"
+			RelativePath="..\src\viewer_fni.h"
 			>
 		</File>
 	</Files>
