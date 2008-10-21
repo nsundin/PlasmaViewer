@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+# Visual C++ Express 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlasmaViewer", "PlasmaViewer.vcproj", "{72AAA1EA-D282-4A30-85CD-21F515D99B96}"
 EndProject
 Global
@@ -9,8 +9,8 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{72AAA1EA-D282-4A30-85CD-21F515D99B96}.Debug|Win32.ActiveCfg = Debug|Win32
-		{72AAA1EA-D282-4A30-85CD-21F515D99B96}.Debug|Win32.Build.0 = Debug|Win32
+		{72AAA1EA-D282-4A30-85CD-21F515D99B96}.Debug|Win32.ActiveCfg = Release|Win32
+		{72AAA1EA-D282-4A30-85CD-21F515D99B96}.Debug|Win32.Build.0 = Release|Win32
 		{72AAA1EA-D282-4A30-85CD-21F515D99B96}.Release|Win32.ActiveCfg = Release|Win32
 		{72AAA1EA-D282-4A30-85CD-21F515D99B96}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
