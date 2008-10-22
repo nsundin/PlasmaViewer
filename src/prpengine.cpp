@@ -151,8 +151,14 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
                             glEnable(GL_TEXTURE_2D);
                             glBindTexture(GL_TEXTURE_2D, texID);
                         }
+						else {
+							glDisable(GL_TEXTURE_2D);
+						}
                     }
-                }
+					else {
+						glDisable(GL_TEXTURE_2D);
+					}
+				}
                 else {
                     glDisable(GL_TEXTURE_2D);
                 }
