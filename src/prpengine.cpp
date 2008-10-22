@@ -146,7 +146,6 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
             for (size_t layeridx = 0; layeridx < material->getNumLayers(); layeridx++) {
                 plKey layerkey = material->getLayer(layeridx);
                 plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
-				printf("Opacity %f ", layer->getOpacity());
                 size_t uvSrc = layer->getUVWSrc() & 0xFFFF;
                 if (!layer->getTexture() == NULL) {
                     if (layer->getTexture().isLoaded()) {
@@ -156,7 +155,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
                             glBindTexture(GL_TEXTURE_2D, texID);
                         }
 						else {
-							printf("\nBad texture: %s ", layer->getTexture()->getName().cstr());
+							printf("Bad texture: %s\n", layer->getTexture()->getName().cstr());
 							glDisable(GL_TEXTURE_2D);
 						}
                     }
@@ -193,7 +192,6 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
                 
                 glDisable(GL_BLEND);
                 glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
-				printf("%x ", layer->getState().fMiscFlags);
                 if ((layer->getState().fBlendFlags & hsGMatState::kBlendAlpha) != 0) {
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -229,7 +227,6 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
                 glEnd();
             }
         }
-		printf("\n");
     }
     return 1;
 }

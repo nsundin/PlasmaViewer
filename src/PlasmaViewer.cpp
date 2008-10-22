@@ -266,6 +266,16 @@ int Load(int argc, char** argv) {
                 appendSObj(so_s[i]);
             }
         }
+        for (size_t i1 = 0; i1 < age->getNumCommonPages(ver); i1++) {
+            std::vector<plKey> mipkeys = rm.getKeys(age->getCommonPageLoc(i1,ver), kMipmap);
+            std::vector<plKey> so_s = rm.getKeys(age->getCommonPageLoc(i1,ver), kSceneObject);
+            for (size_t i = 0; i < mipkeys.size(); i++) {
+                appendTexture(mipkeys[i]);
+            }
+            for (size_t i = 0; i < so_s.size(); i++) {
+                appendSObj(so_s[i]);
+            }
+        }
      }
      else if (plString(filename).afterFirst('.') == "prp") {
         page = rm.ReadPage(filename);
