@@ -33,6 +33,7 @@ void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
     if (obj->getDrawInterface().Exists()) {
         plDrawInterface* draw = plDrawInterface::Convert(obj->getDrawInterface()->getObj());
         if(!draw) return;
+
         plCoordinateInterface* coord = NULL;
         if (obj->getCoordInterface().Exists()) {
             coord = plCoordinateInterface::Convert(obj->getCoordInterface()->getObj());
@@ -55,6 +56,7 @@ void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
             plDrawableSpans* span = plDrawableSpans::Convert(draw->getDrawable(i1)->getObj());
             dObj->renderlevel = span->getRenderLevel();
             dObj->spanflags = span->getProps();
+			dObj->draw = draw;
             DrawableList.push_back(dObj);
         }
     }
@@ -97,6 +99,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
     if ((di.fFlags & plDISpanIndex::kMatrixOnly) != 0) {
         return 0;
     }
+	if(dObj->draw->getProperties().get(0)) return 0;
     for (size_t idx=0; idx<di.fIndices.getSize(); idx++) {
         plIcicle* ice = (plIcicle*)span->getSpan(di.fIndices[idx]);
         hsTArray<plGBufferVertex> verts = span->getVerts(ice);
@@ -143,6 +146,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
             for (size_t layeridx = 0; layeridx < material->getNumLayers(); layeridx++) {
                 plKey layerkey = material->getLayer(layeridx);
                 plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
+				printf("Opacity %f ", layer->getOpacity());
                 size_t uvSrc = layer->getUVWSrc() & 0xFFFF;
                 if (!layer->getTexture() == NULL) {
                     if (layer->getTexture().isLoaded()) {
@@ -152,10 +156,12 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
                             glBindTexture(GL_TEXTURE_2D, texID);
                         }
 						else {
+							printf("\nBad texture: %s ", layer->getTexture()->getName().cstr());
 							glDisable(GL_TEXTURE_2D);
 						}
                     }
 					else {
+						printf("Texture not loaded: %s\n", layer->getTexture()->getName().cstr()); 
 						glDisable(GL_TEXTURE_2D);
 					}
 				}
@@ -187,6 +193,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
                 
                 glDisable(GL_BLEND);
                 glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+				printf("%x ", layer->getState().fMiscFlags);
                 if ((layer->getState().fBlendFlags & hsGMatState::kBlendAlpha) != 0) {
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -196,12 +203,15 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_ONE, GL_ONE);
                     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-                }
+				}
+				int useColor = GL_TRUE, useAlpha = GL_TRUE;
                 if ((layer->getState().fBlendFlags & hsGMatState::kBlendNoTexColor) != 0) {
-                    glEnable(GL_BLEND);
-                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
+					useColor = GL_FALSE;
                 }
+                if ((layer->getState().fBlendFlags & hsGMatState::kBlendNoTexAlpha) != 0) {
+					useAlpha = GL_FALSE;
+                }
+				glColorMask(useColor, useColor, useColor, useAlpha);
 
                 //now our mesh
                 glBegin(GL_TRIANGLES);
@@ -219,6 +229,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
                 glEnd();
             }
         }
+		printf("\n");
     }
     return 1;
 }
@@ -256,6 +267,9 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
 #endif
 
     plMipmap* mipmapimage = plMipmap::Convert(mipmapkey->getObj());
+	if(mipmapimage->getImageData()==0){
+		printf("No image data for: %s\n", mipmapkey->getName().cstr());
+	}
     if (mipmapimage->getCompressionType() == plBitmap::kDirectXCompression){
         unsigned int DXCompressionType = 0;
         if (mipmapimage->getDXCompression() == plBitmap::kDXT1) {
@@ -295,7 +309,7 @@ void prpengine::LoadAllTextures(hsTArray<plKey> Textures) {
             tex->textureInd = gl_texlist[i];
         }
         else {
-            tex->textureInd = 0;
+            tex->textureInd = -1;
         }
         TextureList.push_back(tex);
     }

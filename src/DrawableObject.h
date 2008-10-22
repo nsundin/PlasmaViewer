@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "Math/hsMatrix44.h"
 #include "PRP/KeyedObject/plKey.h"
+#include "PRP/Object/plDrawInterface.h"
 
 class DrawableObject {
 public:
@@ -15,6 +16,7 @@ public:
 	int DrawableKey;
 	unsigned int spanflags;
 	unsigned int renderlevel;
+	plDrawInterface* draw;
 };
 
 #endif
