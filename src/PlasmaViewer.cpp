@@ -100,8 +100,8 @@ void draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
 //	glEnable(GL_POLYGON_OFFSET_FILL);
 //	glPolygonOffset(1.0, 1.0);
-	cam.update();
 	prp_engine.draw();
+	cam.update();
 //	textmgr->Render(window_w,window_h);
 	glFlush();
     SDL_GL_SwapBuffers();

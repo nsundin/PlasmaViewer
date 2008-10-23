@@ -1,5 +1,26 @@
 #include "prpengine.h"
 
+float* getMatrixFrom_hsMatrix44(hsMatrix44 data) {
+    static float mat[16];
+    mat[ 0] = data(0,0);
+    mat[ 1] = data(1,0);
+    mat[ 2] = data(2,0);
+    mat[ 3] = data(3,0);
+    mat[ 4] = data(0,1);
+    mat[ 5] = data(1,1);
+    mat[ 6] = data(2,1);
+    mat[ 7] = data(3,1);
+    mat[ 8] = data(0,2);
+    mat[ 9] = data(1,2);
+    mat[10] = data(2,2);
+    mat[11] = data(3,2);
+    mat[12] = data(0,3);
+    mat[13] = data(1,3);
+    mat[14] = data(2,3);
+    mat[15] = data(3,3);
+    return mat;
+}
+
 
 void prpengine::AttemptToSetPlayerToLinkPointDefault(hsTArray<plKey> SObjects,camera &cam) {
     // let's get the linkinpointdefault (if we can)
@@ -56,10 +77,10 @@ void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
             plDrawableSpans* span = plDrawableSpans::Convert(draw->getDrawable(i1)->getObj());
             dObj->renderlevel = span->getRenderLevel();
             dObj->spanflags = span->getProps();
-			dObj->draw = draw;
+            dObj->draw = draw;
             DrawableList.push_back(dObj);
         }
-		SortDrawableList();
+        SortDrawableList();
     }
 }
 
@@ -100,7 +121,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
     if ((di.fFlags & plDISpanIndex::kMatrixOnly) != 0) {
         return 0;
     }
-	if(dObj->draw->getProperties().get(0)) return 0;
+    if(dObj->draw->getProperties().get(0)) return 0;
     for (size_t idx=0; idx<di.fIndices.getSize(); idx++) {
         plIcicle* ice = (plIcicle*)span->getSpan(di.fIndices[idx]);
         hsTArray<plGBufferVertex> verts = span->getVerts(ice);
@@ -108,32 +129,32 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
         
         //searching for a honest matrix
         hsMatrix44 objtransform;
-        if (dObj->hasCI) {
-            objtransform = dObj->CIMat;
-        }
-        else {
-            objtransform = ice->getLocalToWorld();
-        }
+//        if (dObj->hasCI) {
+//            objtransform = dObj->CIMat;
+//        }
+//        else {
+        objtransform = ice->getLocalToWorld();
+//        }
 
         if (rendermode == 0) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			glDisable(GL_TEXTURE_2D);
-			glDisable(GL_BLEND);
-			float amb[4] = {1.0f,1.0f,1.0f,1.0f};
-			float dif[4] = {1.0f,1.0f,1.0f,1.0f};
-			float spec[4] = {1.0f,1.0f,1.0f,1.0f};
-			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, amb);
-			glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
-			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
-			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, amb);
-			
-			//glLineWidth(0.1f);
+            glDisable(GL_TEXTURE_2D);
+            glDisable(GL_BLEND);
+            float amb[4] = {1.0f,1.0f,1.0f,1.0f};
+            float dif[4] = {1.0f,1.0f,1.0f,1.0f};
+            float spec[4] = {1.0f,1.0f,1.0f,1.0f};
+            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, amb);
+            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
+            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, amb);
+            
+            //glLineWidth(0.1f);
             glBegin(GL_TRIANGLES);
             for (size_t j = 0; j < indices.getSize(); j++) {
                 int indice = indices[j];
                 hsVector3 pos = verts[indice].fPos * objtransform;
-				glColor4f(1.0f,1.0f,1.0f,1.0f);
-				glVertex3f(pos.X,pos.Y ,pos.Z);
+                glColor4f(1.0f,1.0f,1.0f,1.0f);
+                glVertex3f(pos.X,pos.Y ,pos.Z);
             }
             glEnd();
         }
@@ -155,16 +176,16 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
                             glEnable(GL_TEXTURE_2D);
                             glBindTexture(GL_TEXTURE_2D, texID);
                         }
-						else {
-							printf("Bad texture: %s\n", layer->getTexture()->getName().cstr());
-							glDisable(GL_TEXTURE_2D);
-						}
+                        else {
+                            printf("Bad texture: %s\n", layer->getTexture()->getName().cstr());
+                            glDisable(GL_TEXTURE_2D);
+                        }
                     }
-					else {
-						printf("Texture not loaded: %s\n", layer->getTexture()->getName().cstr()); 
-						glDisable(GL_TEXTURE_2D);
-					}
-				}
+                    else {
+                        printf("Texture not loaded: %s\n", layer->getTexture()->getName().cstr()); 
+                        glDisable(GL_TEXTURE_2D);
+                    }
+                }
                 else {
                     glDisable(GL_TEXTURE_2D);
                 }
@@ -202,21 +223,27 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_ONE, GL_ONE);
                     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-				}
-				int useColor = GL_TRUE, useAlpha = GL_TRUE;
+                }
+                int useColor = GL_TRUE, useAlpha = GL_TRUE;
                 if ((layer->getState().fBlendFlags & hsGMatState::kBlendNoTexColor) != 0) {
-					useColor = GL_FALSE;
+                    useColor = GL_FALSE;
                 }
                 if ((layer->getState().fBlendFlags & hsGMatState::kBlendNoTexAlpha) != 0) {
-					useAlpha = GL_FALSE;
+                    useAlpha = GL_FALSE;
                 }
-				glColorMask(useColor, useColor, useColor, useAlpha);
+                glColorMask(useColor, useColor, useColor, useAlpha);
 
                 //now our mesh
                 glBegin(GL_TRIANGLES);
                 for (size_t j = 0; j < indices.getSize(); j++) {
                     int indice = indices[j];
-                    hsVector3 pos = verts[indice].fPos * objtransform;
+                    hsVector3 pos;
+                    if (!dObj->hasCI) {
+                        pos = verts[indice].fPos * objtransform;
+                    }
+                    else {
+                        pos = verts[indice].fPos;
+                    }
                     hsVector3 uvw = verts[indice].fUVWs[uvSrc] * layer->getTransform();
                     glTexCoord2f(uvw.X,uvw.Y);
                 
@@ -243,19 +270,28 @@ void prpengine::UpdateList(hsTArray<plKey> SObjects, bool wireframe) {
 }
 
 bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
-	if(lhs->renderlevel < rhs->renderlevel) return true;
-	else if(lhs->renderlevel > rhs->renderlevel) return false;
+    if(lhs->renderlevel < rhs->renderlevel) return true;
+    else if(lhs->renderlevel > rhs->renderlevel) return false;
     return (lhs->spanflags) < (rhs->spanflags);
 }
 
 void prpengine::SortDrawableList() {
-	std::sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
+    std::sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
 }
 void prpengine::draw() {
     for (size_t i=0; i < DrawableList.size(); i++) {
+        glPushMatrix();
+        if (DrawableList[i]->hasCI) {
+			glMultMatrixf(getMatrixFrom_hsMatrix44(DrawableList[i]->CIMat));
+//			glTranslatef(DrawableList[i]->CIMat(0,3),DrawableList[i]->CIMat(1,3),DrawableList[i]->CIMat(2,3));
+        }
         glCallList(gl_renderlist+i);
+        glPopMatrix();
     }
 }
+
+//			glMultMatrixf(DrawableList[i]->CIMat.glMatrix());
+//			glMultiTransposeMatrixf()
 
 int prpengine::loadHeadSpinMipmapTexture(plKey mipmapkey,int texname) {
 
@@ -267,13 +303,13 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
 #endif
 
     plMipmap* mipmapimage = plMipmap::Convert(mipmapkey->getObj());
-	if(mipmapimage->getImageData()==0){
-		printf("No image data for: %s\n", mipmapkey->getName().cstr());
-	}
+    if(mipmapimage->getImageData()==0){
+        printf("No image data for: %s\n", mipmapkey->getName().cstr());
+    }
     if (mipmapimage->getCompressionType() == plBitmap::kDirectXCompression){
         unsigned int DXCompressionType = 0;
         if (mipmapimage->getDXCompression() == plBitmap::kDXT1)
-			DXCompressionType = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+            DXCompressionType = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
         else if (mipmapimage->getDXCompression() == plBitmap::kDXT3)
             DXCompressionType = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
         else if (mipmapimage->getDXCompression() == plBitmap::kDXT5)
@@ -281,25 +317,25 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
 
         else return 0;
         glBindTexture(GL_TEXTURE_2D, texname); //that thar is the ID
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		for(unsigned int il = 0; il < mipmapimage->getNumLevels(); ++il) {
+        for(unsigned int il = 0; il < mipmapimage->getNumLevels(); ++il) {
             glCompressedTexImage2DARB(GL_TEXTURE_2D, il, DXCompressionType, mipmapimage->getLevelWidth(il), mipmapimage->getLevelHeight(il), 0, mipmapimage->getLevelSize(il),(const unsigned long *)mipmapimage->getLevelData(il));
         }
         return 1;
     }
-	else if (mipmapimage->getCompressionType() == plBitmap::kJPEGCompression) {
+    else if (mipmapimage->getCompressionType() == plBitmap::kJPEGCompression) {
         size_t size = mipmapimage->GetUncompressedSize();
         unsigned char* jpgbuffer = new unsigned char[size];
         try {
             mipmapimage->DecompressImage(jpgbuffer, size);
-	        glBindTexture(GL_TEXTURE_2D, texname);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glBindTexture(GL_TEXTURE_2D, texname);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mipmapimage->getLevelWidth(0), mipmapimage->getLevelHeight(0), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, jpgbuffer);
         } catch (hsException& e) {
@@ -309,11 +345,11 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
         delete[] jpgbuffer;
     } else {
         for (unsigned int il = 0; il < mipmapimage->getNumLevels(); ++il) {
-	        glBindTexture(GL_TEXTURE_2D, texname);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glBindTexture(GL_TEXTURE_2D, texname);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexImage2D(GL_TEXTURE_2D, il, GL_RGBA, mipmapimage->getLevelWidth(il), mipmapimage->getLevelHeight(il), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, mipmapimage->getLevelData(il));
         }
     }
