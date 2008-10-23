@@ -41,7 +41,7 @@ public:
 	void LoadAllTextures(hsTArray<plKey> Textures);
 	void UpdateList(hsTArray<plKey> SObjects,bool wireframe);
 
-//	void SortDrawableList();
+	void SortDrawableList();
 
 	void AttemptToSetPlayerToLinkPointDefault(hsTArray<plKey> SObjects,camera &cam);
 	void AddSceneObjectToDrawableList(plKey sobjectkey);
@@ -55,7 +55,7 @@ private:
 	
 	std::vector<TextureObject*> TextureList;
 	std::vector<DrawableObject*> DrawableList;
-//	bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs);
+	//bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs);
 	int RenderDrawable(DrawableObject* dObj, int rendermode);
 };
 

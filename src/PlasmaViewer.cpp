@@ -78,7 +78,8 @@ void init() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);	
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearAccum(0.0f, 0.0f, 0.0f, 0.0f);
     if (ageLoadMode) {
 //        prp_engine.AttemptToSetFniSettings(plString(filename));
     }
@@ -96,7 +97,7 @@ void resize(int w, int h) {
 }
 
 void draw() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
 //	glEnable(GL_POLYGON_OFFSET_FILL);
 //	glPolygonOffset(1.0, 1.0);
 	cam.update();

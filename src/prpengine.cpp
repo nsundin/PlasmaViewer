@@ -59,6 +59,7 @@ void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
 			dObj->draw = draw;
             DrawableList.push_back(dObj);
         }
+		SortDrawableList();
     }
 }
 
@@ -241,13 +242,15 @@ void prpengine::UpdateList(hsTArray<plKey> SObjects, bool wireframe) {
     }
 }
 
-//bool prpengine::SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
-//    return (lhs->spanflags) < (rhs->spanflags);
-//}
+bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
+	if(lhs->renderlevel < rhs->renderlevel) return true;
+	else if(lhs->renderlevel > rhs->renderlevel) return false;
+    return (lhs->spanflags) < (rhs->spanflags);
+}
 
-//void prpengine::SortDrawableList() {
-//	std::sort(DrawableList.begin(), DrawableList.end(), &prpengine::SortDrawables);
-//}
+void prpengine::SortDrawableList() {
+	std::sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
+}
 void prpengine::draw() {
     for (size_t i=0; i < DrawableList.size(); i++) {
         glCallList(gl_renderlist+i);
