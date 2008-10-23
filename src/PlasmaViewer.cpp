@@ -90,23 +90,18 @@ void resize(int w, int h) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(cam.camFOV, (double)w / (double)h, 1.0f, 100000.0f);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
     window_w = w;
     window_h = h;
 	cam.update();
 }
 
 void draw() {
-//	glDisable(GL_DEPTH_TEST);
-    //glEnable (GL_POLYGON_SMOOTH);
-    glMatrixMode(GL_MODELVIEW);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 //	glEnable(GL_POLYGON_OFFSET_FILL);
 //	glPolygonOffset(1.0, 1.0);
 
 	prp_engine.draw();
+	cam.update();
 //	textmgr->Render(window_w,window_h);
     SDL_GL_SwapBuffers();
 }
