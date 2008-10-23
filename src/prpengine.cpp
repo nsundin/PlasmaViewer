@@ -272,26 +272,51 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
 	}
     if (mipmapimage->getCompressionType() == plBitmap::kDirectXCompression){
         unsigned int DXCompressionType = 0;
-        if (mipmapimage->getDXCompression() == plBitmap::kDXT1) {
-            DXCompressionType = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-        }
-        else if (mipmapimage->getDXCompression() == plBitmap::kDXT5) {
+        if (mipmapimage->getDXCompression() == plBitmap::kDXT1)
+			DXCompressionType = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+        else if (mipmapimage->getDXCompression() == plBitmap::kDXT3)
+            DXCompressionType = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+        else if (mipmapimage->getDXCompression() == plBitmap::kDXT5)
             DXCompressionType = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-        }
+
         else return 0;
         glBindTexture(GL_TEXTURE_2D, texname); //that thar is the ID
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        for(unsigned int il = 0; il < mipmapimage->getNumLevels(); ++il) {
+		for(unsigned int il = 0; il < mipmapimage->getNumLevels(); ++il) {
             glCompressedTexImage2DARB(GL_TEXTURE_2D, il, DXCompressionType, mipmapimage->getLevelWidth(il), mipmapimage->getLevelHeight(il), 0, mipmapimage->getLevelSize(il),(const unsigned long *)mipmapimage->getLevelData(il));
         }
         return 1;
     }
-    return 0;
+	else if (mipmapimage->getCompressionType() == plBitmap::kJPEGCompression) {
+        size_t size = mipmapimage->GetUncompressedSize();
+        unsigned char* jpgbuffer = new unsigned char[size];
+        try {
+            mipmapimage->DecompressImage(jpgbuffer, size);
+	        glBindTexture(GL_TEXTURE_2D, texname);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mipmapimage->getLevelWidth(0), mipmapimage->getLevelHeight(0), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, jpgbuffer);
+        } catch (hsException& e) {
+            delete[] jpgbuffer;
+            return 0;
+        }
+        delete[] jpgbuffer;
+    } else {
+        for (unsigned int il = 0; il < mipmapimage->getNumLevels(); ++il) {
+	        glBindTexture(GL_TEXTURE_2D, texname);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, il, GL_RGBA, mipmapimage->getLevelWidth(il), mipmapimage->getLevelHeight(il), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, mipmapimage->getLevelData(il));
+        }
+    }
 }
 
 void prpengine::LoadAllTextures(hsTArray<plKey> Textures) {
