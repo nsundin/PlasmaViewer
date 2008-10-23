@@ -99,10 +99,10 @@ void draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //	glEnable(GL_POLYGON_OFFSET_FILL);
 //	glPolygonOffset(1.0, 1.0);
-
-	prp_engine.draw();
 	cam.update();
+	prp_engine.draw();
 //	textmgr->Render(window_w,window_h);
+	glFlush();
     SDL_GL_SwapBuffers();
 }
 
@@ -202,6 +202,9 @@ void ProcessEvents() {
     while(SDL_PollEvent(&event)) {
         if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
             KeyCallback(&event.key.keysym,event.type);
+			if (event.key.keysym.sym>27){
+				std::cout << char(event.key.keysym.unicode);
+			}
             break;
         }
    //     if (event.type == SDL_VIDEORESIZE) {
@@ -320,7 +323,7 @@ int main(int argc, char* argv[]) {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_WM_SetCaption("PlasmaViewer", "PlasmaViewer");
-
+	SDL_EnableUNICODE(1);
 
     window_w = 800;//1280;
     window_h = 600;//1024;
