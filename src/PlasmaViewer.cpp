@@ -115,6 +115,7 @@ void setVideoMode(int w,int h,int flags,int bpp) {
 }
 
 void MotionHandler() {
+	bool updateWorld = false;
     if (isMovingForward) {
         if (isShift) {
             cam.moveLocalZ(1.0f);
@@ -122,9 +123,11 @@ void MotionHandler() {
         else {
             cam.moveLocalZ(0.45f);
         }
+		updateWorld = true;
     }
     if (isMovingBackward) {
         cam.moveLocalZ(-0.45f);
+		updateWorld = true;
     }
     if (isTurningRight) {
         cam.angle += 0.025f;
@@ -136,10 +139,15 @@ void MotionHandler() {
     }
     if (isMovingUp) {
         cam.moveLocalY(0.45f);
+		updateWorld = true;
     }
     if (isMovingDown) {
         cam.moveLocalY(-0.45f);
+		updateWorld = true;
     }
+	if(updateWorld) {
+		//prp_engine.UpdateList(SObjects,wireframe, false, cam);
+	}
 }
 
 static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
@@ -171,10 +179,16 @@ static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
             if (type == SDL_KEYDOWN)
                 printf("You are at (%f, %f, %f)\n",cam.getCamPos(0), cam.getCamPos(1),cam.getCamPos(2));
             break;
+		case SDLK_s:
+            if (type == SDL_KEYDOWN)
+				if(isShift) prp_engine.PrevSpawnPoint(cam);
+				else prp_engine.NextSpawnPoint(cam);
+			break;
+
         case SDLK_w:
             if (type == SDL_KEYDOWN){
                 wireframe = !wireframe;
-                prp_engine.UpdateList(SObjects,wireframe);
+                prp_engine.UpdateList(SObjects,wireframe,true,cam);
             }
             break;
         case SDLK_x:
@@ -203,9 +217,9 @@ void ProcessEvents() {
     while(SDL_PollEvent(&event)) {
         if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
             KeyCallback(&event.key.keysym,event.type);
-			if (event.key.keysym.sym>27){
-				std::cout << char(event.key.keysym.unicode);
-			}
+//			if (event.key.keysym.sym>27){
+//				std::cout << char(event.key.keysym.unicode);
+//			}
             break;
         }
    //     if (event.type == SDL_VIDEORESIZE) {
@@ -335,7 +349,7 @@ int main(int argc, char* argv[]) {
     prp_engine.LoadAllTextures(Textures);
     prp_engine.AppendAllObjectsToDrawList(SObjects);
 //    SortDrawableList();
-    prp_engine.UpdateList(SObjects,wireframe);
+    prp_engine.UpdateList(SObjects,wireframe,true,cam);
 
     resize(window_w, window_h);
     init();

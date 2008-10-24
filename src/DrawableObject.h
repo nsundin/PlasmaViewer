@@ -6,6 +6,7 @@
 #include "Math/hsMatrix44.h"
 #include "PRP/KeyedObject/plKey.h"
 #include "PRP/Object/plDrawInterface.h"
+#include "PRP/Animation/plViewFaceModifier.h"
 
 class DrawableObject {
 public:
@@ -17,6 +18,7 @@ public:
 	unsigned int spanflags;
 	unsigned int renderlevel;
 	plDrawInterface* draw;
+	plViewFaceModifier* vfm;
 };
 
 #endif

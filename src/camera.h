@@ -20,8 +20,8 @@ public:
 	void turn();
 	void moveLocalY(float speed);
 	void moveLocalZ(float speed);
-private:
 	float cam[3];
+private:
 	float camL[3];
 };
 

@@ -21,32 +21,67 @@ float* getMatrixFrom_hsMatrix44(hsMatrix44 data) {
     return mat;
 }
 
+template <class T>
+T *prpengine::getModifierOfType(plSceneObject *sObj, T*(type)(plCreatable *pCre)) {
+	for(size_t i = 0; i < sObj->getNumModifiers(); i++) {
+		T *ret = type(sObj->getModifier(i)->getObj());
+		if(ret != 0) return ret;
+	}
+	return 0;
+}
 
+void prpengine::NextSpawnPoint(camera &cam) {
+	if(!SpawnPoints.empty())
+		SetSpawnPoint((curSpawnPoint + 1) % SpawnPoints.getSize(), cam);
+}
+
+void prpengine::PrevSpawnPoint(camera &cam) {
+	if(!SpawnPoints.empty())
+		if(curSpawnPoint)
+			SetSpawnPoint((curSpawnPoint - 1), cam);
+		else
+			SetSpawnPoint(SpawnPoints.getSize() - 1, cam);
+}
+
+void prpengine::SetSpawnPoint(int idx, camera &cam) {
+    plSceneObject* linkinpoint = plSceneObject::Convert(SpawnPoints[idx]->getObj());
+    if (linkinpoint->getCoordInterface().Exists()) {
+		printf("Spawning to: %s\n", SpawnPoints[idx]->getName().cstr());
+        plCoordinateInterface* coord = plCoordinateInterface::Convert(linkinpoint->getCoordInterface()->getObj());
+        hsMatrix44 mat = coord->getLocalToWorld();
+        cam.warp(mat(0,3),mat(1,3),mat(2,3)+5); //raise ourselves up a bit
+        float angles = asin(mat(1,0));
+        float anglec = acos(mat(0,0));
+        if(mat(1,0)<0) anglec = -anglec;
+        if(mat(0,0)<0) angles = 3.141592-angles;
+        //printf("%f %f\n", anglec, angles);
+        cam.angle = angles;
+        cam.turn();
+		curSpawnPoint = idx;
+    }
+}
+bool prpengine::SetSpawnPoint(plString name, camera &cam) {
+	for (int i = 0; i < SpawnPoints.getSize(); i++) {
+        if (name == SpawnPoints[i]->getName())
+		{
+			SetSpawnPoint(i, cam);
+			return true;
+		}
+	}
+	return false;
+}
 void prpengine::AttemptToSetPlayerToLinkPointDefault(hsTArray<plKey> SObjects,camera &cam) {
     // let's get the linkinpointdefault (if we can)
-    printf("\n: LinkInPointDefault :\n");
-    printf("lookin'...\n");
-    for (size_t i = 0; i < SObjects.getSize(); i++) {
-        if ((const plString)"LinkInPointDefault" == SObjects[i]->getName()) {
-            //defaultlinkpoint
-            printf ("Found one!\nWarping\n\n");
-
-            plSceneObject* linkinpoint = plSceneObject::Convert(SObjects[i]->getObj());
-            if (linkinpoint->getCoordInterface().Exists()) {
-                plCoordinateInterface* coord = plCoordinateInterface::Convert(linkinpoint->getCoordInterface()->getObj());
-                hsMatrix44 mat = coord->getLocalToWorld();
-                cam.warp(mat(0,3),mat(1,3),mat(2,3)+5); //raise ourselves up a bit
-                float angles = asin(mat(1,0));
-                float anglec = acos(mat(0,0));
-                if(mat(1,0)<0) anglec = -anglec;
-                if(mat(0,0)<0) angles = 3.141592-angles;
-                printf("%f %f\n", anglec, angles);
-                cam.angle = angles;
-
-                cam.turn();
-            }
-        }
-    }
+    //printf("\n: LinkInPointDefault :\n");
+    //printf("lookin'...\n");
+	size_t i;
+    for (i = 0; i < SObjects.getSize(); i++) {
+		if(getModifierOfType(plSceneObject::Convert(SObjects[i]->getObj()), plSpawnModifier::Convert))
+			SpawnPoints.push(SObjects[i]);
+	}
+	curSpawnPoint = 0;
+ 	if(!SetSpawnPoint(plString("LinkInPointDefault"), cam))
+		printf("Couldn't find a link-in point\n");
 }
 
 void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
@@ -78,6 +113,14 @@ void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
             dObj->renderlevel = span->getRenderLevel();
             dObj->spanflags = span->getProps();
             dObj->draw = draw;
+			dObj->vfm = 0;
+			for(int i = 0; i < obj->getNumModifiers(); i++) {
+				plViewFaceModifier * vfm = plViewFaceModifier::Convert(obj->getModifier(i)->getObj());
+				if(vfm){
+					dObj->vfm = vfm;
+					break;
+				}
+			}
             DrawableList.push_back(dObj);
         }
         SortDrawableList();
@@ -115,7 +158,7 @@ void prpengine::AttemptToSetFniSettings(plString filename) {
     }
 }
 
-int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
+int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam) {
     plDrawableSpans* span = plDrawableSpans::Convert(dObj->SpanKey->getObj());
     plDISpanIndex di = span->getDIIndex(dObj->DrawableKey);
     if ((di.fFlags & plDISpanIndex::kMatrixOnly) != 0) {
@@ -233,7 +276,22 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
                 }
                 glColorMask(useColor, useColor, useColor, useAlpha);
 
-                //now our mesh
+				bool restoreMatrix = false;
+				if(dObj->vfm) {
+					glDisable(GL_CULL_FACE);
+					if(dObj->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
+						restoreMatrix = true;
+						if(dObj->hasCI) {
+							float camV[3], objV[3];
+							for(int i = 0; i < 3; i++) {
+								camV[i] = cam.getCamPos(i);
+								objV[i] = dObj->CIMat(i,3);
+							}
+							//l3dBillboardSphericalBegin(camV, objV);
+						}
+					}
+				}
+				//now our mesh
                 glBegin(GL_TRIANGLES);
                 for (size_t j = 0; j < indices.getSize(); j++) {
                     int indice = indices[j];
@@ -253,20 +311,98 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode) {
                     glVertex3f(pos.X,pos.Y ,pos.Z);
                 }
                 glEnd();
+				if(restoreMatrix)
+					glPopMatrix();
             }
         }
     }
     return 1;
 }
 
-void prpengine::UpdateList(hsTArray<plKey> SObjects, bool wireframe) {
+void prpengine::l3dBillboardSphericalBegin(float *cam, float *worldPos) {
+
+	glPushMatrix();
+//	glLoadIdentity();
+	float lookAt[3]={0,1,0},objToCamProj[3],objToCam[3],upAux[3],angleCosine;
+
+// objToCamProj is the vector in world coordinates from the local origin to the camera
+// projected in the XZ plane
+	objToCamProj[0] = cam[0] - worldPos[0] ;
+	objToCamProj[1] = cam[1] - worldPos[1] ;
+	objToCamProj[2] = 0 ;
+
+// normalize both vectors to get the cosine directly afterwards
+	mathsNormalize(objToCamProj);
+
+// easy fix to determine wether the angle is negative or positive
+// for positive angles upAux will be a vector pointing in the 
+// positive y direction, otherwise upAux will point downwards
+// effectively reversing the rotation.
+
+	mathsCrossProduct(upAux,lookAt,objToCamProj);
+
+// compute the angle
+	angleCosine = mathsInnerProduct(lookAt,objToCamProj);
+
+// perform the rotation. The if statement is used for stability reasons
+// if the lookAt and v vectors are too close together then |aux| could
+// be bigger than 1 due to lack of precision
+	if ((angleCosine < 0.99990) && (angleCosine > -0.9999))
+		glRotatef(acos(angleCosine)*180/3.14,upAux[0], upAux[1], upAux[2]);	
+
+
+// The second part tilts the object so that it faces the camera
+
+// objToCam is the vector in world coordinates from the local origin to the camera
+	objToCam[0] = cam[0] - worldPos[0] ;
+	objToCam[1] = cam[1] - worldPos[1] ;
+	objToCam[2] = cam[2] - worldPos[2] ;
+
+// Normalize to get the cosine afterwards
+	mathsNormalize(objToCam);
+
+// Compute the angle between v and v2, i.e. compute the
+// required angle for the lookup vector
+	angleCosine = mathsInnerProduct(objToCamProj,objToCam);
+
+
+// Tilt the object. The test is done to prevent instability when objToCam and objToCamProj have a very small
+// angle between them
+/*	if ((angleCosine < 0.99990) && (angleCosine > -0.9999))
+		if (objToCam[2] < 0)
+			glRotatef(acos(angleCosine)*180/3.14,1,0,0);	
+		else
+			glRotatef(acos(angleCosine)*180/3.14,-1,0,0);	
+*/
+}
+
+void prpengine::UpdateList(hsTArray<plKey> SObjects, bool wireframe, bool firstTime, camera &cam) {
     printf("Renderlist Update\n");
-    gl_renderlist = glGenLists(SObjects.getSize());
-    for (size_t i=0; i < DrawableList.size(); i++) {
-        glNewList(gl_renderlist+i, GL_COMPILE);
-        RenderDrawable(DrawableList[i],wireframe?0:1);
-        glEndList();
-    }
+	int count = 0;
+	if(firstTime || gl_rendercount == 0) {
+		if(!gl_rendercount)
+			glDeleteLists(gl_renderlist, gl_rendercount);
+		gl_rendercount = SObjects.getSize();
+		gl_renderlist = glGenLists(gl_rendercount);
+		for (size_t i=0; i < DrawableList.size(); i++) {
+			glNewList(gl_renderlist+i, GL_COMPILE);
+			RenderDrawable(DrawableList[i],wireframe?0:1,cam);
+			glEndList();
+			count++;
+		}
+	}
+	else {
+		for (size_t i=0; i < DrawableList.size(); i++) {
+			if(DrawableList[i]->vfm && DrawableList[i]->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
+				glDeleteLists(gl_renderlist+i, 1);
+				glNewList(gl_renderlist+i, GL_COMPILE);
+				RenderDrawable(DrawableList[i],wireframe?0:1,cam);
+				glEndList();
+				count++;
+			}
+		}
+	}
+	printf("Regenerated %d items\n", count);
 }
 
 bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
@@ -326,7 +462,7 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
         }
         return 1;
     }
-    else if (mipmapimage->getCompressionType() == plBitmap::kJPEGCompression) {
+    /*else if (mipmapimage->getCompressionType() == plBitmap::kJPEGCompression) {
         size_t size = mipmapimage->GetUncompressedSize();
         unsigned char* jpgbuffer = new unsigned char[size];
         try {
@@ -343,7 +479,7 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
             return 0;
         }
         delete[] jpgbuffer;
-    } else {
+    } */else {
         for (unsigned int il = 0; il < mipmapimage->getNumLevels(); ++il) {
             glBindTexture(GL_TEXTURE_2D, texname);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
