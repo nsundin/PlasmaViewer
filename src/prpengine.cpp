@@ -23,30 +23,31 @@ float* getMatrixFrom_hsMatrix44(hsMatrix44 data) {
 
 template <class T>
 T *prpengine::getModifierOfType(plSceneObject *sObj, T*(type)(plCreatable *pCre)) {
-	for(size_t i = 0; i < sObj->getNumModifiers(); i++) {
-		T *ret = type(sObj->getModifier(i)->getObj());
-		if(ret != 0) return ret;
-	}
-	return 0;
+    for(size_t i = 0; i < sObj->getNumModifiers(); i++) {
+        T *ret = type(sObj->getModifier(i)->getObj());
+        if(ret != 0) return ret;
+    }
+    return 0;
 }
 
 void prpengine::NextSpawnPoint(camera &cam) {
-	if(!SpawnPoints.empty())
-		SetSpawnPoint((curSpawnPoint + 1) % SpawnPoints.getSize(), cam);
+    if(!SpawnPoints.empty())
+        SetSpawnPoint((curSpawnPoint + 1) % SpawnPoints.getSize(), cam);
 }
 
 void prpengine::PrevSpawnPoint(camera &cam) {
-	if(!SpawnPoints.empty())
-		if(curSpawnPoint)
-			SetSpawnPoint((curSpawnPoint - 1), cam);
-		else
-			SetSpawnPoint(SpawnPoints.getSize() - 1, cam);
+    if(!SpawnPoints.empty()) {
+        if(curSpawnPoint)
+            SetSpawnPoint((curSpawnPoint - 1), cam);
+        else
+            SetSpawnPoint(SpawnPoints.getSize() - 1, cam);
+    }
 }
 
 void prpengine::SetSpawnPoint(int idx, camera &cam) {
     plSceneObject* linkinpoint = plSceneObject::Convert(SpawnPoints[idx]->getObj());
     if (linkinpoint->getCoordInterface().Exists()) {
-		printf("Spawning to: %s\n", SpawnPoints[idx]->getName().cstr());
+        printf("Spawning to: %s\n", SpawnPoints[idx]->getName().cstr());
         plCoordinateInterface* coord = plCoordinateInterface::Convert(linkinpoint->getCoordInterface()->getObj());
         hsMatrix44 mat = coord->getLocalToWorld();
         cam.warp(mat(0,3),mat(1,3),mat(2,3)+5); //raise ourselves up a bit
@@ -57,31 +58,31 @@ void prpengine::SetSpawnPoint(int idx, camera &cam) {
         //printf("%f %f\n", anglec, angles);
         cam.angle = angles;
         cam.turn();
-		curSpawnPoint = idx;
+        curSpawnPoint = idx;
     }
 }
 bool prpengine::SetSpawnPoint(plString name, camera &cam) {
-	for (int i = 0; i < SpawnPoints.getSize(); i++) {
+    for (size_t i = 0; i < SpawnPoints.getSize(); i++) {
         if (name == SpawnPoints[i]->getName())
-		{
-			SetSpawnPoint(i, cam);
-			return true;
-		}
-	}
-	return false;
+        {
+            SetSpawnPoint(i, cam);
+            return true;
+        }
+    }
+    return false;
 }
 void prpengine::AttemptToSetPlayerToLinkPointDefault(hsTArray<plKey> SObjects,camera &cam) {
     // let's get the linkinpointdefault (if we can)
     //printf("\n: LinkInPointDefault :\n");
     //printf("lookin'...\n");
-	size_t i;
+    size_t i;
     for (i = 0; i < SObjects.getSize(); i++) {
-		if(getModifierOfType(plSceneObject::Convert(SObjects[i]->getObj()), plSpawnModifier::Convert))
-			SpawnPoints.push(SObjects[i]);
-	}
-	curSpawnPoint = 0;
- 	if(!SetSpawnPoint(plString("LinkInPointDefault"), cam))
-		printf("Couldn't find a link-in point\n");
+        if(getModifierOfType(plSceneObject::Convert(SObjects[i]->getObj()), plSpawnModifier::Convert))
+            SpawnPoints.push(SObjects[i]);
+    }
+    curSpawnPoint = 0;
+    if(!SetSpawnPoint(plString("LinkInPointDefault"), cam))
+        printf("Couldn't find a link-in point\n");
 }
 
 void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
@@ -108,19 +109,19 @@ void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
             }
             dObj->DrawableKey = draw->getDrawableKey(i1);
             dObj->SpanKey = draw->getDrawable(i1);
-            dObj->Owner = sobjectkey;	
+            dObj->Owner = sobjectkey;
             plDrawableSpans* span = plDrawableSpans::Convert(draw->getDrawable(i1)->getObj());
             dObj->renderlevel = span->getRenderLevel();
             dObj->spanflags = span->getProps();
             dObj->draw = draw;
-			dObj->vfm = 0;
-			for(int i = 0; i < obj->getNumModifiers(); i++) {
-				plViewFaceModifier * vfm = plViewFaceModifier::Convert(obj->getModifier(i)->getObj());
-				if(vfm){
-					dObj->vfm = vfm;
-					break;
-				}
-			}
+            dObj->vfm = 0;
+            for(size_t i = 0; i < obj->getNumModifiers(); i++) {
+                plViewFaceModifier * vfm = plViewFaceModifier::Convert(obj->getModifier(i)->getObj());
+                if(vfm){
+                    dObj->vfm = vfm;
+                    break;
+                }
+            }
             DrawableList.push_back(dObj);
         }
         SortDrawableList();
@@ -169,7 +170,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
         plIcicle* ice = (plIcicle*)span->getSpan(di.fIndices[idx]);
         hsTArray<plGBufferVertex> verts = span->getVerts(ice);
         hsTArray<unsigned short> indices = span->getIndices(ice);
-        
+
         //searching for a honest matrix
         hsMatrix44 objtransform;
 //        if (dObj->hasCI) {
@@ -190,7 +191,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
             glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
             glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
             glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, amb);
-            
+
             //glLineWidth(0.1f);
             glBegin(GL_TRIANGLES);
             for (size_t j = 0; j < indices.getSize(); j++) {
@@ -212,7 +213,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
                 plKey layerkey = material->getLayer(layeridx);
                 plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
                 size_t uvSrc = layer->getUVWSrc() & 0xFFFF;
-                if (!layer->getTexture() == NULL) {
+                if (layer->getTexture()) {
                     if (layer->getTexture().isLoaded()) {
                         int texID = getTextureIDFromKey(layer->getTexture());
                         if (texID != -1) {
@@ -225,7 +226,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
                         }
                     }
                     else {
-                        printf("Texture not loaded: %s\n", layer->getTexture()->getName().cstr()); 
+                        printf("Texture not loaded: %s\n", layer->getTexture()->getName().cstr());
                         glDisable(GL_TEXTURE_2D);
                     }
                 }
@@ -243,7 +244,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
                     glCullFace(GL_BACK);
                 }
                 float amb[4] = { layer->getAmbient().r, layer->getAmbient().g,
-								 layer->getAmbient().b, layer->getAmbient().a };
+                                 layer->getAmbient().b, layer->getAmbient().a };
                 float dif[4] = { layer->getRuntime().r, layer->getRuntime().g,
                                  layer->getRuntime().b, layer->getRuntime().a };
                 float spec[4] = { layer->getSpecular().r, layer->getSpecular().g,
@@ -254,7 +255,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
                 if (layer->getState().fShadeFlags & hsGMatState::kShadeEmissive)
                     glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_EMISSION, amb);
                 //glPixelTransferf(GL_ALPHA_SCALE, layer->getOpacity());
-                
+
                 glDisable(GL_BLEND);
                 glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
                 if ((layer->getState().fBlendFlags & hsGMatState::kBlendAlpha) != 0) {
@@ -276,7 +277,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
                 }
                 glColorMask(useColor, useColor, useColor, useAlpha);
 
-				//now our mesh
+                //now our mesh
                 glBegin(GL_TRIANGLES);
                 for (size_t j = 0; j < indices.getSize(); j++) {
                     int indice = indices[j];
@@ -289,11 +290,14 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
                     }
                     hsVector3 uvw = verts[indice].fUVWs[uvSrc] * layer->getTransform();
                     glTexCoord2f(uvw.X,uvw.Y);
-                
+
                     hsColor32 col = verts[indice].fColor;
-					glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
+                    glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
                     glNormal3f(verts[indice].fNormal.X,verts[indice].fNormal.Y,verts[indice].fNormal.Z);
-                    glVertex3f(pos.X,pos.Y ,pos.Z);
+                    if (ice->getProps() & plSpan::kWaterHeight)
+                        glVertex3f(pos.X,pos.Y, ice->getWaterHeight());
+                    else
+                        glVertex3f(pos.X,pos.Y ,pos.Z);
                 }
                 glEnd();
             }
@@ -304,89 +308,90 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
 
 void prpengine::l3dBillboardSphericalBegin(float *cam, float *worldPos) {
 
-//	glPushMatrix();
-//	glLoadIdentity();
-	float lookAt[3]={0,-1,0},objToCamProj[3],objToCam[3],upAux[3],angleCosine;
+//  glPushMatrix();
+//  glLoadIdentity();
+    float lookAt[3]={0,-1,0},objToCamProj[3],objToCam[3],upAux[3],angleCosine;
 
 // objToCamProj is the vector in world coordinates from the local origin to the camera
 // projected in the XZ plane
-	objToCamProj[0] = cam[0] - worldPos[0] ;
-	objToCamProj[1] = cam[1] - worldPos[1] ;
-	objToCamProj[2] = 0 ;
+    objToCamProj[0] = cam[0] - worldPos[0] ;
+    objToCamProj[1] = cam[1] - worldPos[1] ;
+    objToCamProj[2] = 0 ;
 
 // normalize both vectors to get the cosine directly afterwards
-	mathsNormalize(objToCamProj);
+    mathsNormalize(objToCamProj);
 
 // easy fix to determine wether the angle is negative or positive
-// for positive angles upAux will be a vector pointing in the 
+// for positive angles upAux will be a vector pointing in the
 // positive y direction, otherwise upAux will point downwards
 // effectively reversing the rotation.
 
-	mathsCrossProduct(upAux,lookAt,objToCamProj);
+    mathsCrossProduct(upAux,lookAt,objToCamProj);
 
 // compute the angle
-	angleCosine = mathsInnerProduct(lookAt,objToCamProj);
+    angleCosine = mathsInnerProduct(lookAt,objToCamProj);
 
 // perform the rotation. The if statement is used for stability reasons
 // if the lookAt and v vectors are too close together then |aux| could
 // be bigger than 1 due to lack of precision
-	if ((angleCosine < 0.99990) && (angleCosine > -0.9999))
-		glRotatef(acos(angleCosine)*180/3.14,upAux[0], upAux[2], upAux[1]);	
+    if ((angleCosine < 0.99990) && (angleCosine > -0.9999))
+        glRotatef(acos(angleCosine)*180/3.14,upAux[0], upAux[2], upAux[1]);
 
 
 // The second part tilts the object so that it faces the camera
 
 // objToCam is the vector in world coordinates from the local origin to the camera
-	objToCam[0] = cam[0] - worldPos[0] ;
-	objToCam[1] = cam[1] - worldPos[1] ;
-	objToCam[2] = cam[2] - worldPos[2] ;
+    objToCam[0] = cam[0] - worldPos[0] ;
+    objToCam[1] = cam[1] - worldPos[1] ;
+    objToCam[2] = cam[2] - worldPos[2] ;
 
 // Normalize to get the cosine afterwards
-	mathsNormalize(objToCam);
+    mathsNormalize(objToCam);
 
 // Compute the angle between v and v2, i.e. compute the
 // required angle for the lookup vector
-	angleCosine = mathsInnerProduct(objToCamProj,objToCam);
+    angleCosine = mathsInnerProduct(objToCamProj,objToCam);
 
 
 // Tilt the object. The test is done to prevent instability when objToCam and objToCamProj have a very small
 // angle between them
-	if ((angleCosine < 0.99990) && (angleCosine > -0.9999))
-		if (objToCam[2] < 0)
-			glRotatef(acos(angleCosine)*180/3.14,-1,0,0);	
-		else
-			glRotatef(acos(angleCosine)*180/3.14,1,0,0);	
+    if ((angleCosine < 0.99990) && (angleCosine > -0.9999)) {
+        if (objToCam[2] < 0)
+            glRotatef(acos(angleCosine)*180/3.14,-1,0,0);
+        else
+            glRotatef(acos(angleCosine)*180/3.14,1,0,0);
+    }
 
 }
 
 void prpengine::UpdateList(hsTArray<plKey> SObjects, bool wireframe, bool firstTime, camera &cam) {
     printf("Renderlist Update\n");
-	int count = 0;
-	if(firstTime || gl_rendercount == 0) {
-		if(!gl_rendercount)
-			glDeleteLists(gl_renderlist, gl_rendercount);
-		gl_rendercount = SObjects.getSize();
-		gl_renderlist = glGenLists(gl_rendercount);
-		for (size_t i=0; i < DrawableList.size(); i++) {
-			DrawableList[i]->RenderIndex =  i;
-			glNewList(gl_renderlist+i, GL_COMPILE);
-			RenderDrawable(DrawableList[i],wireframe?0:1,cam);
-			glEndList();
-			count++;
-		}
-	}
-	else {
-		for (size_t i=0; i < DrawableList.size(); i++) {
-			if(DrawableList[i]->vfm && DrawableList[i]->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
-				glDeleteLists(gl_renderlist+DrawableList[i]->RenderIndex, 1);
-				glNewList(gl_renderlist+DrawableList[i]->RenderIndex, GL_COMPILE);
-				RenderDrawable(DrawableList[i],wireframe?0:1,cam);
-				glEndList();
-				count++;
-			}
-		}
-	}
-	printf("Regenerated %d items\n", count);
+    int count = 0;
+    if(firstTime || gl_rendercount == 0) {
+        if(!gl_rendercount)
+            glDeleteLists(gl_renderlist, gl_rendercount);
+        gl_rendercount = SObjects.getSize();
+        gl_renderlist = glGenLists(gl_rendercount);
+        for (size_t i=0; i < DrawableList.size(); i++) {
+            DrawableList[i]->RenderIndex =  i;
+            glNewList(gl_renderlist+i, GL_COMPILE);
+            RenderDrawable(DrawableList[i],wireframe?0:1,cam);
+            glEndList();
+            count++;
+        }
+    }
+    else {
+        for (size_t i=0; i < DrawableList.size(); i++) {
+            if(DrawableList[i]->vfm && DrawableList[i]->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
+                glDeleteLists(gl_renderlist+DrawableList[i]->RenderIndex, 1);
+                glNewList(gl_renderlist+DrawableList[i]->RenderIndex, GL_COMPILE);
+                RenderDrawable(DrawableList[i],wireframe?0:1,cam);
+                glEndList();
+                count++;
+            }
+        }
+    }
+    printf("Regenerated %d items\n", count);
 }
 
 bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
@@ -394,51 +399,51 @@ bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
     else if(lhs->renderlevel > rhs->renderlevel) return false;
     else if(lhs->spanflags < rhs->spanflags) return true;
     else if(lhs->spanflags > rhs->spanflags) return false;
-	else
-		if(lhs->hasCI && rhs->hasCI) {
-		float a1 = lhs->CIMat(0,3) - cam.getCamPos(0); 
-		float b1 = lhs->CIMat(1,3) - cam.getCamPos(1); 
-		float c1 = lhs->CIMat(2,3) - cam.getCamPos(2); 
-		float a2 = rhs->CIMat(0,3) - cam.getCamPos(0); 
-		float b2 = rhs->CIMat(1,3) - cam.getCamPos(1); 
-		float c2 = rhs->CIMat(2,3) - cam.getCamPos(2);
-		return (a1*a1+b1*b1+c1*c1) > (a2*a2+b2*b2+c2*c2);
-	}
-	return false;
+    else
+        if(lhs->hasCI && rhs->hasCI) {
+        float a1 = lhs->CIMat(0,3) - cam.getCamPos(0);
+        float b1 = lhs->CIMat(1,3) - cam.getCamPos(1);
+        float c1 = lhs->CIMat(2,3) - cam.getCamPos(2);
+        float a2 = rhs->CIMat(0,3) - cam.getCamPos(0);
+        float b2 = rhs->CIMat(1,3) - cam.getCamPos(1);
+        float c2 = rhs->CIMat(2,3) - cam.getCamPos(2);
+        return (a1*a1+b1*b1+c1*c1) > (a2*a2+b2*b2+c2*c2);
+    }
+    return false;
 }
 
 void prpengine::SortDrawableList() {
-	std::stable_sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
+    std::stable_sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
 }
 void prpengine::PrintObjects() {
     for (size_t i=0; i < DrawableList.size(); i++) {
-		DrawableObject *dObj = DrawableList[i];
-		printf("%d: %s\n", i, dObj->Owner->getName().cstr());
-	}
+        DrawableObject *dObj = DrawableList[i];
+        printf("%d: %s\n", i, dObj->Owner->getName().cstr());
+    }
 }
 void prpengine::draw(camera &cam) {
-	SortDrawableList();
+    SortDrawableList();
     for (size_t i=0; i < DrawableList.size(); i++) {
-		DrawableObject *dObj = DrawableList[i];
-	//	printf("%d: %s\n", i, dObj->Owner->getName().cstr());
+        DrawableObject *dObj = DrawableList[i];
+    //  printf("%d: %s\n", i, dObj->Owner->getName().cstr());
         glPushMatrix();
         if (dObj->hasCI) {
-			glMultMatrixf(getMatrixFrom_hsMatrix44(DrawableList[i]->CIMat));
+            glMultMatrixf(getMatrixFrom_hsMatrix44(DrawableList[i]->CIMat));
         }
-		if(dObj->vfm) {
-			if(dObj->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
-				if(dObj->hasCI) {
-					float camV[3], objV[3];
-					for(int i = 0; i < 3; i++) {
-						camV[i] = cam.getCamPos(i);
-						objV[i] = dObj->CIMat(i,3);
-					}
-					l3dBillboardSphericalBegin(camV, objV);
-				}
-			}
-		}
+        if(dObj->vfm) {
+            if(dObj->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
+                if(dObj->hasCI) {
+                    float camV[3], objV[3];
+                    for(int i = 0; i < 3; i++) {
+                        camV[i] = cam.getCamPos(i);
+                        objV[i] = dObj->CIMat(i,3);
+                    }
+                    l3dBillboardSphericalBegin(camV, objV);
+                }
+            }
+        }
         glCallList(gl_renderlist+dObj->RenderIndex);
-		//RenderDrawable(dObj,1,cam);
+        //RenderDrawable(dObj,1,cam);
         glPopMatrix();
     }
 }
@@ -471,7 +476,7 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//		printf("Creating texture %d: w%d, h%d, l%d, t%i\n", texname, mipmapimage->getWidth(), mipmapimage->getHeight(), mipmapimage->getNumLevels(), 2* (DXCompressionType&15)-1);
+//      printf("Creating texture %d: w%d, h%d, l%d, t%i\n", texname, mipmapimage->getWidth(), mipmapimage->getHeight(), mipmapimage->getNumLevels(), 2* (DXCompressionType&15)-1);
         for(unsigned int il = 0; il < mipmapimage->getNumLevels(); ++il) {
             glCompressedTexImage2DARB(GL_TEXTURE_2D, il, DXCompressionType, mipmapimage->getLevelWidth(il), mipmapimage->getLevelHeight(il), 0, mipmapimage->getLevelSize(il),(const unsigned long *)mipmapimage->getLevelData(il));
         }
@@ -503,9 +508,9 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexImage2D(GL_TEXTURE_2D, il, GL_RGBA, mipmapimage->getLevelWidth(il), mipmapimage->getLevelHeight(il), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, mipmapimage->getLevelData(il));
         }
-		return 1;
+        return 1;
     }
-		return 0;
+        return 0;
 }
 
 void prpengine::LoadAllTextures(hsTArray<plKey> Textures) {

@@ -73,19 +73,19 @@ void quit(int code) {
 }
 void init() {
 //    glEnable(GL_LINE_SMOOTH);
-	glDisable(GL_LIGHTING);
+    glDisable(GL_LIGHTING);
     glClearDepth(1.0f);
     glShadeModel(GL_SMOOTH);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);	
+    glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClearAccum(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearAccum(0.0f, 0.0f, 0.0f, 0.0f);
     if (ageLoadMode) {
 //        prp_engine.AttemptToSetFniSettings(plString(filename));
     }
     prp_engine.AttemptToSetPlayerToLinkPointDefault(SObjects,cam);
-//	textmgr->printToScreen("Hello World!");
+//  textmgr->printToScreen("Hello World!");
 }
 void resize(int w, int h) {
     glViewport(0, 0, w, h);
@@ -94,17 +94,17 @@ void resize(int w, int h) {
     gluPerspective(cam.camFOV, (double)w / (double)h, 1.0f, 100000.0f);
     window_w = w;
     window_h = h;
-	cam.update();
+    cam.update();
 }
 
 void draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
-//	glEnable(GL_POLYGON_OFFSET_FILL);
-//	glPolygonOffset(1.0, 1.0);
-	prp_engine.draw(cam);
-	cam.update();
-//	textmgr->Render(window_w,window_h);
-	glFlush();
+//  glEnable(GL_POLYGON_OFFSET_FILL);
+//  glPolygonOffset(1.0, 1.0);
+    prp_engine.draw(cam);
+    cam.update();
+//  textmgr->Render(window_w,window_h);
+    glFlush();
     SDL_GL_SwapBuffers();
 }
 
@@ -148,7 +148,7 @@ static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
         case SDLK_ESCAPE:
             if (type == SDL_KEYDOWN) quit(0);
             break;
-        case SDLK_LEFT: 
+        case SDLK_LEFT:
             if (type == SDL_KEYDOWN) isTurningLeft = true;
             else isTurningLeft = false;
             break;
@@ -175,12 +175,13 @@ static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
         case SDLK_p:
             if (type == SDL_KEYDOWN)
                 prp_engine.PrintObjects();
-            break;			
-		case SDLK_s:
-            if (type == SDL_KEYDOWN)
-				if(isShift) prp_engine.PrevSpawnPoint(cam);
-				else prp_engine.NextSpawnPoint(cam);
-			break;
+            break;
+        case SDLK_s:
+            if (type == SDL_KEYDOWN) {
+                if(isShift) prp_engine.PrevSpawnPoint(cam);
+                else prp_engine.NextSpawnPoint(cam);
+            }
+            break;
 
         case SDLK_w:
             if (type == SDL_KEYDOWN){
@@ -214,13 +215,13 @@ void ProcessEvents() {
     while(SDL_PollEvent(&event)) {
         if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
             KeyCallback(&event.key.keysym,event.type);
-//			if (event.key.keysym.sym>27){
-//				std::cout << char(event.key.keysym.unicode);
-//			}
+//          if (event.key.keysym.sym>27){
+//              std::cout << char(event.key.keysym.unicode);
+//          }
             break;
         }
    //     if (event.type == SDL_VIDEORESIZE) {
-			//printf("RESIZE!!!\n");
+            //printf("RESIZE!!!\n");
    //         window_w = event.resize.w;
    //         window_h = event.resize.h;
    //         setVideoMode(window_w,window_h,window_flags,window_bpp);
@@ -245,10 +246,10 @@ void appendSObj(plKey sobjectkey) {
         SObjects.append(sobjectkey);
     }
 }
- 
+
 void LoadLocation(const plLocation &loc) {
-	std::vector<plKey> mipkeys = rm.getKeys(loc, kMipmap);
-	std::vector<plKey> so_s = rm.getKeys(loc, kSceneObject);
+    std::vector<plKey> mipkeys = rm.getKeys(loc, kMipmap);
+    std::vector<plKey> so_s = rm.getKeys(loc, kSceneObject);
     for (size_t i = 0; i < mipkeys.size(); i++) {
         appendTexture(mipkeys[i]);
     }
@@ -260,7 +261,7 @@ int Load(int argc, char** argv) {
   rm.setVer(ver, true);
   plDebug::Init(plDebug::kDLAll);
   if (argc < (int) 2) {
-//	filename = "C:\\test.prp";
+//  filename = "C:\\test.prp";
       filename = "C:\\Kveer.age";
     printf("expects prp-path as first argument\n");
 //  return 0;
@@ -276,19 +277,19 @@ int Load(int argc, char** argv) {
         ageLoadMode = 1;
         plAgeInfo* age = rm.ReadAge(filename, true);
         for (size_t i1 = 0; i1 < age->getNumPages(); i1++) {
-			LoadLocation(age->getPageLoc(i1,ver));
+            LoadLocation(age->getPageLoc(i1,ver));
         }
         for (size_t i1 = 0; i1 < age->getNumCommonPages(ver); i1++) {
-			LoadLocation(age->getCommonPageLoc(i1,ver));
+            LoadLocation(age->getCommonPageLoc(i1,ver));
         }
      }
      else if (plString(filename).afterFirst('.') == "prp") {
-		 LoadLocation(rm.ReadPage(filename)->getLocation());
-		plString base = plString(filename).beforeLast('_');
-		if(base.endsWith("District")) {
-			plString texs = base + plString("_Textures.prp");
-			LoadLocation(rm.ReadPage(texs)->getLocation());
-		}
+         LoadLocation(rm.ReadPage(filename)->getLocation());
+        plString base = plString(filename).beforeLast('_');
+        if(base.endsWith("District")) {
+            plString texs = base + plString("_Textures.prp");
+            LoadLocation(rm.ReadPage(texs)->getLocation());
+        }
      }
   } catch (const hsException& e) {
       plDebug::Error("%s:%lu: %s", e.File(), e.Line(), e.what());
@@ -327,7 +328,7 @@ int main(int argc, char* argv[]) {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_WM_SetCaption("PlasmaViewer", "PlasmaViewer");
-	SDL_EnableUNICODE(1);
+    SDL_EnableUNICODE(1);
 
     window_w = 800;//1280;
     window_h = 600;//1024;
