@@ -249,7 +249,16 @@ void appendSObj(plKey sobjectkey) {
     }
 }
  
-
+void LoadLocation(const plLocation &loc) {
+	std::vector<plKey> mipkeys = rm.getKeys(loc, kMipmap);
+	std::vector<plKey> so_s = rm.getKeys(loc, kSceneObject);
+    for (size_t i = 0; i < mipkeys.size(); i++) {
+        appendTexture(mipkeys[i]);
+    }
+    for (size_t i = 0; i < so_s.size(); i++) {
+        appendSObj(so_s[i]);
+    }
+}
 int Load(int argc, char** argv) {
   rm.setVer(ver, true);
   plDebug::Init(plDebug::kDLAll);
@@ -270,36 +279,19 @@ int Load(int argc, char** argv) {
         ageLoadMode = 1;
         plAgeInfo* age = rm.ReadAge(filename, true);
         for (size_t i1 = 0; i1 < age->getNumPages(); i1++) {
-            std::vector<plKey> mipkeys = rm.getKeys(age->getPageLoc(i1,ver), kMipmap);
-            std::vector<plKey> so_s = rm.getKeys(age->getPageLoc(i1,ver), kSceneObject);
-            for (size_t i = 0; i < mipkeys.size(); i++) {
-                appendTexture(mipkeys[i]);
-            }
-            for (size_t i = 0; i < so_s.size(); i++) {
-                appendSObj(so_s[i]);
-            }
+			LoadLocation(age->getPageLoc(i1,ver));
         }
         for (size_t i1 = 0; i1 < age->getNumCommonPages(ver); i1++) {
-            std::vector<plKey> mipkeys = rm.getKeys(age->getCommonPageLoc(i1,ver), kMipmap);
-            std::vector<plKey> so_s = rm.getKeys(age->getCommonPageLoc(i1,ver), kSceneObject);
-            for (size_t i = 0; i < mipkeys.size(); i++) {
-                appendTexture(mipkeys[i]);
-            }
-            for (size_t i = 0; i < so_s.size(); i++) {
-                appendSObj(so_s[i]);
-            }
+			LoadLocation(age->getCommonPageLoc(i1,ver));
         }
      }
      else if (plString(filename).afterFirst('.') == "prp") {
-        page = rm.ReadPage(filename);
-        std::vector<plKey> mipkeys = rm.getKeys(page->getLocation(), kMipmap);
-        std::vector<plKey> so_s = rm.getKeys(page->getLocation(), kSceneObject);
-        for (size_t i = 0; i < mipkeys.size(); i++) {
-            appendTexture(mipkeys[i]);
-        }
-        for (size_t i = 0; i < so_s.size(); i++) {
-            appendSObj(so_s[i]);
-        }
+		 LoadLocation(rm.ReadPage(filename)->getLocation());
+		plString base = plString(filename).beforeLast('_');
+		if(base.endsWith("District")) {
+			plString texs = base + plString("_Textures.prp");
+			LoadLocation(rm.ReadPage(texs)->getLocation());
+		}
      }
   } catch (const hsException& e) {
       plDebug::Error("%s:%lu: %s", e.File(), e.Line(), e.what());
