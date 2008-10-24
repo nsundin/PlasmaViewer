@@ -391,13 +391,25 @@ void prpengine::UpdateList(hsTArray<plKey> SObjects, bool wireframe, bool firstT
 bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
     if(lhs->renderlevel < rhs->renderlevel) return true;
     else if(lhs->renderlevel > rhs->renderlevel) return false;
-    return (lhs->spanflags) < (rhs->spanflags);
+    else if(lhs->spanflags < rhs->spanflags) return true;
+    else if(lhs->spanflags > rhs->spanflags) return false;
+	else if(lhs->hasCI && rhs->hasCI) {
+		float a1 = lhs->CIMat(0,3) - cam.getCamPos(0); 
+		float b1 = lhs->CIMat(1,3) - cam.getCamPos(1); 
+		float c1 = lhs->CIMat(2,3) - cam.getCamPos(2); 
+		float a2 = rhs->CIMat(0,3) - cam.getCamPos(0); 
+		float b2 = rhs->CIMat(1,3) - cam.getCamPos(1); 
+		float c2 = rhs->CIMat(2,3) - cam.getCamPos(2);
+		return a1*a1+b1*b1+c1*c1 > a2*a2+b2*b2+c2*c2;
+	}
+	return false;
 }
 
 void prpengine::SortDrawableList() {
-    std::sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
+	std::sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
 }
 void prpengine::draw(camera &cam) {
+	SortDrawableList();
     for (size_t i=0; i < DrawableList.size(); i++) {
 		DrawableObject *dObj = DrawableList[i];
         glPushMatrix();

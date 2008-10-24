@@ -51,6 +51,7 @@ public:
 	void NextSpawnPoint(camera &cam);
 	void PrevSpawnPoint(camera &cam);
 	bool SetSpawnPoint(plString name, camera &cam);
+	//bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs);
 private:
 	GLint gl_renderlist;
 	GLint gl_rendercount;
@@ -62,12 +63,11 @@ private:
 	std::vector<DrawableObject*> DrawableList;
 	hsTArray<plKey> SpawnPoints;
 	int curSpawnPoint;
-	//bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs);
 	int RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam);
 	void l3dBillboardSphericalBegin(float *cam, float *worldPos);
 	template <class T>
 	T *getModifierOfType(plSceneObject *sObj, T*(type)(plCreatable *pCre));
 	void SetSpawnPoint(int idxc, camera &cam);
 };
-
+extern  camera cam;
 #endif
