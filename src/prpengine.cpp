@@ -243,11 +243,11 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
                     glCullFace(GL_BACK);
                 }
                 float amb[4] = { layer->getAmbient().r, layer->getAmbient().g,
-                                 layer->getAmbient().b, layer->getAmbient().b };
+								 layer->getAmbient().b, layer->getAmbient().a };
                 float dif[4] = { layer->getRuntime().r, layer->getRuntime().g,
-                                 layer->getRuntime().b, layer->getRuntime().b };
+                                 layer->getRuntime().b, layer->getRuntime().a };
                 float spec[4] = { layer->getSpecular().r, layer->getSpecular().g,
-                                  layer->getSpecular().b, layer->getSpecular().b };
+                                  layer->getSpecular().b, layer->getSpecular().a };
                 glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_AMBIENT, amb);
                 glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
                 glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_SPECULAR, spec);
@@ -276,21 +276,6 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
                 }
                 glColorMask(useColor, useColor, useColor, useAlpha);
 
-				bool restoreMatrix = false;
-				if(dObj->vfm) {
-					glDisable(GL_CULL_FACE);
-					if(dObj->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
-						restoreMatrix = true;
-						if(dObj->hasCI) {
-							float camV[3], objV[3];
-							for(int i = 0; i < 3; i++) {
-								camV[i] = cam.getCamPos(i);
-								objV[i] = dObj->CIMat(i,3);
-							}
-							//l3dBillboardSphericalBegin(camV, objV);
-						}
-					}
-				}
 				//now our mesh
                 glBegin(GL_TRIANGLES);
                 for (size_t j = 0; j < indices.getSize(); j++) {
@@ -306,13 +291,11 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
                     glTexCoord2f(uvw.X,uvw.Y);
                 
                     hsColor32 col = verts[indice].fColor;
-                    glColor4ub(col.r,col.g,col.b,col.a);
+					glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
                     glNormal3f(verts[indice].fNormal.X,verts[indice].fNormal.Y,verts[indice].fNormal.Z);
                     glVertex3f(pos.X,pos.Y ,pos.Z);
                 }
                 glEnd();
-				if(restoreMatrix)
-					glPopMatrix();
             }
         }
     }
@@ -323,7 +306,7 @@ void prpengine::l3dBillboardSphericalBegin(float *cam, float *worldPos) {
 
 	glPushMatrix();
 //	glLoadIdentity();
-	float lookAt[3]={0,1,0},objToCamProj[3],objToCam[3],upAux[3],angleCosine;
+	float lookAt[3]={0,-1,0},objToCamProj[3],objToCam[3],upAux[3],angleCosine;
 
 // objToCamProj is the vector in world coordinates from the local origin to the camera
 // projected in the XZ plane
@@ -348,7 +331,7 @@ void prpengine::l3dBillboardSphericalBegin(float *cam, float *worldPos) {
 // if the lookAt and v vectors are too close together then |aux| could
 // be bigger than 1 due to lack of precision
 	if ((angleCosine < 0.99990) && (angleCosine > -0.9999))
-		glRotatef(acos(angleCosine)*180/3.14,upAux[0], upAux[1], upAux[2]);	
+		glRotatef(acos(angleCosine)*180/3.14,upAux[0], upAux[2], upAux[1]);	
 
 
 // The second part tilts the object so that it faces the camera
@@ -368,12 +351,12 @@ void prpengine::l3dBillboardSphericalBegin(float *cam, float *worldPos) {
 
 // Tilt the object. The test is done to prevent instability when objToCam and objToCamProj have a very small
 // angle between them
-/*	if ((angleCosine < 0.99990) && (angleCosine > -0.9999))
+	if ((angleCosine < 0.99990) && (angleCosine > -0.9999))
 		if (objToCam[2] < 0)
-			glRotatef(acos(angleCosine)*180/3.14,1,0,0);	
-		else
 			glRotatef(acos(angleCosine)*180/3.14,-1,0,0);	
-*/
+		else
+			glRotatef(acos(angleCosine)*180/3.14,1,0,0);	
+
 }
 
 void prpengine::UpdateList(hsTArray<plKey> SObjects, bool wireframe, bool firstTime, camera &cam) {
@@ -414,20 +397,29 @@ bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
 void prpengine::SortDrawableList() {
     std::sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
 }
-void prpengine::draw() {
+void prpengine::draw(camera &cam) {
     for (size_t i=0; i < DrawableList.size(); i++) {
+		DrawableObject *dObj = DrawableList[i];
         glPushMatrix();
-        if (DrawableList[i]->hasCI) {
+        if (dObj->hasCI) {
 			glMultMatrixf(getMatrixFrom_hsMatrix44(DrawableList[i]->CIMat));
-//			glTranslatef(DrawableList[i]->CIMat(0,3),DrawableList[i]->CIMat(1,3),DrawableList[i]->CIMat(2,3));
         }
+		if(dObj->vfm) {
+			if(dObj->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
+				if(dObj->hasCI) {
+					float camV[3], objV[3];
+					for(int i = 0; i < 3; i++) {
+						camV[i] = cam.getCamPos(i);
+						objV[i] = dObj->CIMat(i,3);
+					}
+					l3dBillboardSphericalBegin(camV, objV);
+				}
+			}
+		}
         glCallList(gl_renderlist+i);
         glPopMatrix();
     }
 }
-
-//			glMultMatrixf(DrawableList[i]->CIMat.glMatrix());
-//			glMultiTransposeMatrixf()
 
 int prpengine::loadHeadSpinMipmapTexture(plKey mipmapkey,int texname) {
 
@@ -453,10 +445,11 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
 
         else return 0;
         glBindTexture(GL_TEXTURE_2D, texname); //that thar is the ID
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//		printf("Creating texture %d: w%d, h%d, l%d, t%i\n", texname, mipmapimage->getWidth(), mipmapimage->getHeight(), mipmapimage->getNumLevels(), 2* (DXCompressionType&15)-1);
         for(unsigned int il = 0; il < mipmapimage->getNumLevels(); ++il) {
             glCompressedTexImage2DARB(GL_TEXTURE_2D, il, DXCompressionType, mipmapimage->getLevelWidth(il), mipmapimage->getLevelHeight(il), 0, mipmapimage->getLevelSize(il),(const unsigned long *)mipmapimage->getLevelData(il));
         }
@@ -482,13 +475,15 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
     } */else {
         for (unsigned int il = 0; il < mipmapimage->getNumLevels(); ++il) {
             glBindTexture(GL_TEXTURE_2D, texname);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexImage2D(GL_TEXTURE_2D, il, GL_RGBA, mipmapimage->getLevelWidth(il), mipmapimage->getLevelHeight(il), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, mipmapimage->getLevelData(il));
         }
+		return 1;
     }
+		return 0;
 }
 
 void prpengine::LoadAllTextures(hsTArray<plKey> Textures) {

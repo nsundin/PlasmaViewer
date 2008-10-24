@@ -38,7 +38,7 @@
 
 class prpengine {
 public:
-	void draw();
+	void draw(camera &cam);
 	void LoadAllTextures(hsTArray<plKey> Textures);
 	void UpdateList(hsTArray<plKey> SObjects,bool wireframe, bool firstTime, camera &cam);
 

@@ -73,6 +73,7 @@ void quit(int code) {
 }
 void init() {
 //    glEnable(GL_LINE_SMOOTH);
+	glDisable(GL_LIGHTING);
     glClearDepth(1.0f);
     glShadeModel(GL_SMOOTH);
     glEnable(GL_DEPTH_TEST);
@@ -100,7 +101,7 @@ void draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
 //	glEnable(GL_POLYGON_OFFSET_FILL);
 //	glPolygonOffset(1.0, 1.0);
-	prp_engine.draw();
+	prp_engine.draw(cam);
 	cam.update();
 //	textmgr->Render(window_w,window_h);
 	glFlush();
@@ -115,7 +116,6 @@ void setVideoMode(int w,int h,int flags,int bpp) {
 }
 
 void MotionHandler() {
-	bool updateWorld = false;
     if (isMovingForward) {
         if (isShift) {
             cam.moveLocalZ(1.0f);
@@ -123,11 +123,9 @@ void MotionHandler() {
         else {
             cam.moveLocalZ(0.45f);
         }
-		updateWorld = true;
     }
     if (isMovingBackward) {
         cam.moveLocalZ(-0.45f);
-		updateWorld = true;
     }
     if (isTurningRight) {
         cam.angle += 0.025f;
@@ -139,15 +137,10 @@ void MotionHandler() {
     }
     if (isMovingUp) {
         cam.moveLocalY(0.45f);
-		updateWorld = true;
     }
     if (isMovingDown) {
         cam.moveLocalY(-0.45f);
-		updateWorld = true;
     }
-	if(updateWorld) {
-		//prp_engine.UpdateList(SObjects,wireframe, false, cam);
-	}
 }
 
 static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
