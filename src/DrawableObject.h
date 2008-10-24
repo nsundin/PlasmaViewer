@@ -15,6 +15,7 @@ public:
 	plKey Owner;
 	plKey SpanKey;
 	int DrawableKey;
+	int RenderIndex;
 	unsigned int spanflags;
 	unsigned int renderlevel;
 	plDrawInterface* draw;

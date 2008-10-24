@@ -176,7 +176,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
 //            objtransform = dObj->CIMat;
 //        }
 //        else {
-        objtransform = ice->getLocalToWorld();
+//        objtransform = ice->getLocalToWorld();
 //        }
 
         if (rendermode == 0) {
@@ -195,7 +195,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
             glBegin(GL_TRIANGLES);
             for (size_t j = 0; j < indices.getSize(); j++) {
                 int indice = indices[j];
-                hsVector3 pos = verts[indice].fPos * objtransform;
+                hsVector3 pos = verts[indice].fPos;// * objtransform;
                 glColor4f(1.0f,1.0f,1.0f,1.0f);
                 glVertex3f(pos.X,pos.Y ,pos.Z);
             }
@@ -282,7 +282,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
                     int indice = indices[j];
                     hsVector3 pos;
                     if (!dObj->hasCI) {
-                        pos = verts[indice].fPos * objtransform;
+                        pos = verts[indice].fPos;// * objtransform;
                     }
                     else {
                         pos = verts[indice].fPos;
@@ -304,7 +304,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
 
 void prpengine::l3dBillboardSphericalBegin(float *cam, float *worldPos) {
 
-	glPushMatrix();
+//	glPushMatrix();
 //	glLoadIdentity();
 	float lookAt[3]={0,-1,0},objToCamProj[3],objToCam[3],upAux[3],angleCosine;
 
@@ -368,6 +368,7 @@ void prpengine::UpdateList(hsTArray<plKey> SObjects, bool wireframe, bool firstT
 		gl_rendercount = SObjects.getSize();
 		gl_renderlist = glGenLists(gl_rendercount);
 		for (size_t i=0; i < DrawableList.size(); i++) {
+			DrawableList[i]->RenderIndex =  i;
 			glNewList(gl_renderlist+i, GL_COMPILE);
 			RenderDrawable(DrawableList[i],wireframe?0:1,cam);
 			glEndList();
@@ -377,8 +378,8 @@ void prpengine::UpdateList(hsTArray<plKey> SObjects, bool wireframe, bool firstT
 	else {
 		for (size_t i=0; i < DrawableList.size(); i++) {
 			if(DrawableList[i]->vfm && DrawableList[i]->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
-				glDeleteLists(gl_renderlist+i, 1);
-				glNewList(gl_renderlist+i, GL_COMPILE);
+				glDeleteLists(gl_renderlist+DrawableList[i]->RenderIndex, 1);
+				glNewList(gl_renderlist+DrawableList[i]->RenderIndex, GL_COMPILE);
 				RenderDrawable(DrawableList[i],wireframe?0:1,cam);
 				glEndList();
 				count++;
@@ -393,25 +394,33 @@ bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
     else if(lhs->renderlevel > rhs->renderlevel) return false;
     else if(lhs->spanflags < rhs->spanflags) return true;
     else if(lhs->spanflags > rhs->spanflags) return false;
-	else if(lhs->hasCI && rhs->hasCI) {
+	else
+		if(lhs->hasCI && rhs->hasCI) {
 		float a1 = lhs->CIMat(0,3) - cam.getCamPos(0); 
 		float b1 = lhs->CIMat(1,3) - cam.getCamPos(1); 
 		float c1 = lhs->CIMat(2,3) - cam.getCamPos(2); 
 		float a2 = rhs->CIMat(0,3) - cam.getCamPos(0); 
 		float b2 = rhs->CIMat(1,3) - cam.getCamPos(1); 
 		float c2 = rhs->CIMat(2,3) - cam.getCamPos(2);
-		return a1*a1+b1*b1+c1*c1 > a2*a2+b2*b2+c2*c2;
+		return (a1*a1+b1*b1+c1*c1) > (a2*a2+b2*b2+c2*c2);
 	}
 	return false;
 }
 
 void prpengine::SortDrawableList() {
-	std::sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
+	std::stable_sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
+}
+void prpengine::PrintObjects() {
+    for (size_t i=0; i < DrawableList.size(); i++) {
+		DrawableObject *dObj = DrawableList[i];
+		printf("%d: %s\n", i, dObj->Owner->getName().cstr());
+	}
 }
 void prpengine::draw(camera &cam) {
 	SortDrawableList();
     for (size_t i=0; i < DrawableList.size(); i++) {
 		DrawableObject *dObj = DrawableList[i];
+	//	printf("%d: %s\n", i, dObj->Owner->getName().cstr());
         glPushMatrix();
         if (dObj->hasCI) {
 			glMultMatrixf(getMatrixFrom_hsMatrix44(DrawableList[i]->CIMat));
@@ -428,7 +437,8 @@ void prpengine::draw(camera &cam) {
 				}
 			}
 		}
-        glCallList(gl_renderlist+i);
+        glCallList(gl_renderlist+dObj->RenderIndex);
+		//RenderDrawable(dObj,1,cam);
         glPopMatrix();
     }
 }

@@ -172,6 +172,10 @@ static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
             if (type == SDL_KEYDOWN)
                 printf("You are at (%f, %f, %f)\n",cam.getCamPos(0), cam.getCamPos(1),cam.getCamPos(2));
             break;
+        case SDLK_p:
+            if (type == SDL_KEYDOWN)
+                prp_engine.PrintObjects();
+            break;			
 		case SDLK_s:
             if (type == SDL_KEYDOWN)
 				if(isShift) prp_engine.PrevSpawnPoint(cam);

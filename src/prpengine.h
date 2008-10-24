@@ -43,6 +43,7 @@ public:
 	void UpdateList(hsTArray<plKey> SObjects,bool wireframe, bool firstTime, camera &cam);
 
 	void SortDrawableList();
+	void PrintObjects();
 
 	void AttemptToSetPlayerToLinkPointDefault(hsTArray<plKey> SObjects,camera &cam);
 	void AddSceneObjectToDrawableList(plKey sobjectkey);
