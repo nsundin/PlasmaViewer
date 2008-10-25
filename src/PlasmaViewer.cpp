@@ -210,14 +210,15 @@ static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
     }
 }
 
+
 void ProcessEvents() {
     SDL_Event event;
     while(SDL_PollEvent(&event)) {
         if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
             KeyCallback(&event.key.keysym,event.type);
-//          if (event.key.keysym.sym>27){
-//              std::cout << char(event.key.keysym.unicode);
-//          }
+//            if (event.key.keysym.sym>27){
+//                std::cout << char(event.key.keysym.unicode);
+//            }
             break;
         }
    //     if (event.type == SDL_VIDEORESIZE) {

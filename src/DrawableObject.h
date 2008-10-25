@@ -10,6 +10,10 @@
 
 class DrawableObject {
 public:
+	plKey ClusterKey;
+	bool isCluster;
+
+	bool isAnimPlaying;
 	bool hasCI;
 	hsMatrix44 CIMat;
 	plKey Owner;

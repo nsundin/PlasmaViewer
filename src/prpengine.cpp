@@ -160,150 +160,152 @@ void prpengine::AttemptToSetFniSettings(plString filename) {
 }
 
 int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam) {
-    plDrawableSpans* span = plDrawableSpans::Convert(dObj->SpanKey->getObj());
-    plDISpanIndex di = span->getDIIndex(dObj->DrawableKey);
-    if ((di.fFlags & plDISpanIndex::kMatrixOnly) != 0) {
-        return 0;
-    }
-    if(dObj->draw->getProperties().get(0)) return 0;
-    for (size_t idx=0; idx<di.fIndices.getSize(); idx++) {
-        plIcicle* ice = (plIcicle*)span->getSpan(di.fIndices[idx]);
-        hsTArray<plGBufferVertex> verts = span->getVerts(ice);
-        hsTArray<unsigned short> indices = span->getIndices(ice);
+//	if (!dObj->isCluster) {
+	if (true) {
+		plDrawableSpans* span = plDrawableSpans::Convert(dObj->SpanKey->getObj());
+		plDISpanIndex di = span->getDIIndex(dObj->DrawableKey);
+		if ((di.fFlags & plDISpanIndex::kMatrixOnly) != 0) {
+			return 0;
+		}
+		if(dObj->draw->getProperties().get(0)) return 0;
+		for (size_t idx=0; idx<di.fIndices.getSize(); idx++) {
+			plIcicle* ice = (plIcicle*)span->getSpan(di.fIndices[idx]);
+			//searching for a honest matrix... oh no it's not anymore.  what a pity =P
+			plKey materialkey = span->getMaterial(ice->getMaterialIdx());
+			if (!materialkey.isLoaded())
+				return 0;
+			hsGMaterial* material = hsGMaterial::Convert(materialkey->getObj());
+			renderSpanMesh(span->getVerts(ice),span->getIndices(ice),material,(ice->getProps() & plSpan::kWaterHeight),ice->getWaterHeight());
+		}
+	}
+	else {
+		plClusterGroup* cluster = plClusterGroup::Convert(dObj->ClusterKey->getObj());
+		
+		plKey materialkey = cluster->fMaterial;
+		if (!materialkey.isLoaded())
+			return 0;
+		hsGMaterial* material = hsGMaterial::Convert(materialkey->getObj());
 
-        //searching for a honest matrix
-        hsMatrix44 objtransform;
-//        if (dObj->hasCI) {
-//            objtransform = dObj->CIMat;
-//        }
-//        else {
-//        objtransform = ice->getLocalToWorld();
-//        }
-
-        if (rendermode == 0) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glDisable(GL_TEXTURE_2D);
-            glDisable(GL_BLEND);
-            float amb[4] = {1.0f,1.0f,1.0f,1.0f};
-            float dif[4] = {1.0f,1.0f,1.0f,1.0f};
-            float spec[4] = {1.0f,1.0f,1.0f,1.0f};
-            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, amb);
-            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
-            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
-            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, amb);
-
-            //glLineWidth(0.1f);
-            glBegin(GL_TRIANGLES);
-            for (size_t j = 0; j < indices.getSize(); j++) {
-                int indice = indices[j];
-                hsVector3 pos = verts[indice].fPos;// * objtransform;
-                glColor4f(1.0f,1.0f,1.0f,1.0f);
-                glVertex3f(pos.X,pos.Y ,pos.Z);
-            }
-            glEnd();
-        }
-
-        if (rendermode == 1) {
-            plKey materialkey = span->getMaterial(ice->getMaterialIdx());
-            if (!materialkey.isLoaded()) {
-                return 0;
-            }
-            hsGMaterial* material = hsGMaterial::Convert(materialkey->getObj());
-            for (size_t layeridx = 0; layeridx < material->getNumLayers(); layeridx++) {
-                plKey layerkey = material->getLayer(layeridx);
-                plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
-                size_t uvSrc = layer->getUVWSrc() & 0xFFFF;
-                if (layer->getTexture()) {
-                    if (layer->getTexture().isLoaded()) {
-                        int texID = getTextureIDFromKey(layer->getTexture());
-                        if (texID != -1) {
-                            glEnable(GL_TEXTURE_2D);
-                            glBindTexture(GL_TEXTURE_2D, texID);
-                        }
-                        else {
-                            printf("Bad texture: %s\n", layer->getTexture()->getName().cstr());
-                            glDisable(GL_TEXTURE_2D);
-                        }
-                    }
-                    else {
-                        printf("Texture not loaded: %s\n", layer->getTexture()->getName().cstr());
-                        glDisable(GL_TEXTURE_2D);
-                    }
-                }
-                else {
-                    glDisable(GL_TEXTURE_2D);
-                }
-                bool is2Sided = (layer->getState().fMiscFlags & hsGMatState::kMiscTwoSided) != 0;
-                if (is2Sided) {
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                    glDisable(GL_CULL_FACE);
-                }
-                else {
-                    glPolygonMode(GL_FRONT, GL_FILL);
-                    glEnable(GL_CULL_FACE);
-                    glCullFace(GL_BACK);
-                }
-                float amb[4] = { layer->getAmbient().r, layer->getAmbient().g,
-                                 layer->getAmbient().b, layer->getAmbient().a };
-                float dif[4] = { layer->getRuntime().r, layer->getRuntime().g,
-                                 layer->getRuntime().b, layer->getRuntime().a };
-                float spec[4] = { layer->getSpecular().r, layer->getSpecular().g,
-                                  layer->getSpecular().b, layer->getSpecular().a };
-                glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_AMBIENT, amb);
-                glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
-                glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_SPECULAR, spec);
-                if (layer->getState().fShadeFlags & hsGMatState::kShadeEmissive)
-                    glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_EMISSION, amb);
-                //glPixelTransferf(GL_ALPHA_SCALE, layer->getOpacity());
-
-                glDisable(GL_BLEND);
-                glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
-                if ((layer->getState().fBlendFlags & hsGMatState::kBlendAlpha) != 0) {
-                    glEnable(GL_BLEND);
-                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-                }
-                if ((layer->getState().fBlendFlags & hsGMatState::kBlendAdd) != 0) {
-                    glEnable(GL_BLEND);
-                    glBlendFunc(GL_ONE, GL_ONE);
-                    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-                }
-                int useColor = GL_TRUE, useAlpha = GL_TRUE;
-                if ((layer->getState().fBlendFlags & hsGMatState::kBlendNoTexColor) != 0) {
-                    useColor = GL_FALSE;
-                }
-                if ((layer->getState().fBlendFlags & hsGMatState::kBlendNoTexAlpha) != 0) {
-                    useAlpha = GL_FALSE;
-                }
-                glColorMask(useColor, useColor, useColor, useAlpha);
-
-                //now our mesh
-                glBegin(GL_TRIANGLES);
-                for (size_t j = 0; j < indices.getSize(); j++) {
-                    int indice = indices[j];
-                    hsVector3 pos;
-                    if (!dObj->hasCI) {
-                        pos = verts[indice].fPos;// * objtransform;
-                    }
-                    else {
-                        pos = verts[indice].fPos;
-                    }
-                    hsVector3 uvw = verts[indice].fUVWs[uvSrc] * layer->getTransform();
-                    glTexCoord2f(uvw.X,uvw.Y);
-
-                    hsColor32 col = verts[indice].fColor;
-                    glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
-                    glNormal3f(verts[indice].fNormal.X,verts[indice].fNormal.Y,verts[indice].fNormal.Z);
-                    if (ice->getProps() & plSpan::kWaterHeight)
-                        glVertex3f(pos.X,pos.Y, ice->getWaterHeight());
-                    else
-                        glVertex3f(pos.X,pos.Y ,pos.Z);
-                }
-                glEnd();
-            }
-        }
-    }
+		plSpanTemplate* span = cluster->getTemplate();
+		renderClusterMesh(span->getVertices(),span->fIndices,span->fNumTris,material);
+	}
     return 1;
+}
+
+
+
+void prpengine::renderClusterMesh(hsTArray<plSpanTemplate::Vertex> verts, unsigned short* indices, int NumTris, hsGMaterial* material) {
+	for (size_t layeridx = 0; layeridx < material->getNumLayers(); layeridx++) {
+		plKey layerkey = material->getLayer(layeridx);
+		plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
+		size_t uvSrc = layer->getUVWSrc() & 0xFFFF;
+		SetLayerParams(layer);
+		//now our mesh
+		glBegin(GL_TRIANGLES);
+		for (size_t j=0; j < (size_t)(NumTris * 3); j++) {
+			int indice = indices[j];
+			hsVector3 pos;
+			pos = verts[indice].fPosition;		
+			hsVector3 uvw = verts[indice].fUVWs[uvSrc] * layer->getTransform();
+			glTexCoord2f(uvw.X,uvw.Y);
+			hsColor32 col = verts[indice].fColor;
+			glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
+			glNormal3f(verts[indice].fNormal.X,verts[indice].fNormal.Y,verts[indice].fNormal.Z);
+			glVertex3f(pos.X,pos.Y ,pos.Z);
+		}
+		glEnd();
+	}
+}
+
+void prpengine::renderSpanMesh(hsTArray<plGBufferVertex> verts, hsTArray<unsigned short> indices,hsGMaterial* material,bool isWaveset, float WaterHeight) {
+	for (size_t layeridx = 0; layeridx < material->getNumLayers(); layeridx++) {
+		plKey layerkey = material->getLayer(layeridx);
+		plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
+		size_t uvSrc = layer->getUVWSrc() & 0xFFFF;
+		SetLayerParams(layer);
+		glBegin(GL_TRIANGLES);
+		for (size_t j = 0; j < indices.getSize(); j++) {
+			int indice = indices[j];
+			hsVector3 pos;		
+			pos = verts[indice].fPos;		
+			hsVector3 uvw = verts[indice].fUVWs[uvSrc] * layer->getTransform();
+			glTexCoord2f(uvw.X,uvw.Y);
+			hsColor32 col = verts[indice].fColor;
+			glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
+			glNormal3f(verts[indice].fNormal.X,verts[indice].fNormal.Y,verts[indice].fNormal.Z);
+			if (isWaveset)
+				glVertex3f(pos.X,pos.Y, WaterHeight);
+			else
+				glVertex3f(pos.X,pos.Y ,pos.Z);
+		}
+		glEnd();
+	}
+}
+
+void prpengine::SetLayerParams(plLayerInterface* layer) {
+	if (layer->getTexture()) {
+		if (layer->getTexture().isLoaded()) {
+			int texID = getTextureIDFromKey(layer->getTexture());
+			if (texID != -1) {
+				glEnable(GL_TEXTURE_2D);
+				glBindTexture(GL_TEXTURE_2D, texID);
+			}
+			else {
+				printf("Bad texture: %s\n", layer->getTexture()->getName().cstr());
+				glDisable(GL_TEXTURE_2D);
+			}
+		}
+		else {
+			printf("Texture not loaded: %s\n", layer->getTexture()->getName().cstr());
+			glDisable(GL_TEXTURE_2D);
+		}
+	}
+	else {
+		glDisable(GL_TEXTURE_2D);
+	}
+	bool is2Sided = (layer->getState().fMiscFlags & hsGMatState::kMiscTwoSided) != 0;
+	if (is2Sided) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glDisable(GL_CULL_FACE);
+	}
+	else {
+		glPolygonMode(GL_FRONT, GL_FILL);
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+	}
+	float amb[4] = { layer->getAmbient().r, layer->getAmbient().g,
+					 layer->getAmbient().b, layer->getAmbient().a };
+	float dif[4] = { layer->getRuntime().r, layer->getRuntime().g,
+					 layer->getRuntime().b, layer->getRuntime().a };
+	float spec[4] = { layer->getSpecular().r, layer->getSpecular().g,
+					  layer->getSpecular().b, layer->getSpecular().a };
+	glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_AMBIENT, amb);
+	glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
+	glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+	if (layer->getState().fShadeFlags & hsGMatState::kShadeEmissive)
+		glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_EMISSION, amb);
+	//glPixelTransferf(GL_ALPHA_SCALE, layer->getOpacity());
+
+	glDisable(GL_BLEND);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+	if ((layer->getState().fBlendFlags & hsGMatState::kBlendAlpha) != 0) {
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	}
+	if ((layer->getState().fBlendFlags & hsGMatState::kBlendAdd) != 0) {
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE);
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	}
+	int useColor = GL_TRUE, useAlpha = GL_TRUE;
+	if ((layer->getState().fBlendFlags & hsGMatState::kBlendNoTexColor) != 0) {
+		useColor = GL_FALSE;
+	}
+	if ((layer->getState().fBlendFlags & hsGMatState::kBlendNoTexAlpha) != 0) {
+		useAlpha = GL_FALSE;
+	}
+	glColorMask(useColor, useColor, useColor, useAlpha);
 }
 
 void prpengine::l3dBillboardSphericalBegin(float *cam, float *worldPos) {
@@ -504,7 +506,7 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
             glBindTexture(GL_TEXTURE_2D, texname);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexImage2D(GL_TEXTURE_2D, il, GL_RGBA, mipmapimage->getLevelWidth(il), mipmapimage->getLevelHeight(il), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, mipmapimage->getLevelData(il));
         }
@@ -543,3 +545,28 @@ int prpengine::getTextureIDFromKey(plKey in_key) {
     }
     return -1;
 }
+
+
+
+    //if (rendermode == 0) {
+    //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //    glDisable(GL_TEXTURE_2D);
+    //    glDisable(GL_BLEND);
+    //    float amb[4] = {1.0f,1.0f,1.0f,1.0f};
+    //    float dif[4] = {1.0f,1.0f,1.0f,1.0f};
+    //    float spec[4] = {1.0f,1.0f,1.0f,1.0f};
+    //    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, amb);
+    //    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
+    //    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+    //    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, amb);
+
+    //    //glLineWidth(0.1f);
+    //    glBegin(GL_TRIANGLES);
+    //    for (size_t j = 0; j < indices.getSize(); j++) {
+    //        int indice = indices[j];
+    //        hsVector3 pos = verts[indice].fPos;
+    //        glColor4f(1.0f,1.0f,1.0f,1.0f);
+    //        glVertex3f(pos.X,pos.Y ,pos.Z);
+    //    }
+    //    glEnd();
+    //}

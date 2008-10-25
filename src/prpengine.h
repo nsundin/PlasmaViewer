@@ -30,6 +30,8 @@
 #include "PRP/Geometry/plDrawableSpans.h"
 #include "PRP/Surface/plLayer.h"
 #include "PRP/Modifier/plSpawnModifier.h"
+#include "PRP/Geometry/plClusterGroup.h"
+#include "PRP/Geometry/plSpanTemplate.h"
 #include "camera.h"
 #include "viewer_fni.h"
 #include "DrawableObject.h"
@@ -64,6 +66,9 @@ private:
 	std::vector<DrawableObject*> DrawableList;
 	hsTArray<plKey> SpawnPoints;
 	int curSpawnPoint;
+	void renderClusterMesh(hsTArray<plSpanTemplate::Vertex> verts, unsigned short* indices, int NumTris,hsGMaterial* material);
+	void renderSpanMesh(hsTArray<plGBufferVertex> verts, hsTArray<unsigned short> indices,hsGMaterial* material,bool isWaveset, float WaterHeight);
+	void SetLayerParams(plLayerInterface* layer);
 	int RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam);
 	void l3dBillboardSphericalBegin(float *cam, float *worldPos);
 	template <class T>
