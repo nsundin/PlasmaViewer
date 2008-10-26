@@ -27,6 +27,8 @@
 
 #include "PRP/Surface/hsGMaterial.h"
 #include "PRP/Surface/hsGMatState.h"
+#include "PlasmaDefs.h"
+
 #include "Sys/hsColor.h"
 #include "prpengine.h"
 
@@ -108,6 +110,24 @@ void draw() {
     SDL_GL_SwapBuffers();
 }
 
+void drawLoading(float loaded) {
+    glViewport(0, 0, window_w, window_h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0.0, (double)window_w, 0.0,(double)window_h);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glColor3f(1.0f,1.0f,1.0f);
+
+	glRectf(0.0f,10.f,window_w*loaded,0.0f);
+	//glBegin(GL_QUADS);
+	//glVertex2f(0.0f,10.f);
+	//glVertex2f(window_w,10.0f);
+	//glVertex2f(0.0f,0.0f);
+	//glVertex2f(window_w,0.0f);
+	//glEnd();
+
+	SDL_GL_SwapBuffers();
+}
 void setVideoMode(int w,int h,int flags,int bpp) {
     if( SDL_SetVideoMode(w, h, bpp, flags) == 0 ) {
         printf("[FAIL] SDL_SetVideoMode: %s\n", SDL_GetError());
@@ -259,57 +279,83 @@ void LoadLocation(const plLocation &loc) {
     }
 }
 int Load(int argc, char** argv) {
-  rm.setVer(ver, true);
-  plDebug::Init(plDebug::kDLAll);
-  if (argc < (int) 2) {
-//  filename = "C:\\test.prp";
-      filename = "C:\\Kveer.age";
-    printf("expects prp-path as first argument\n");
-//  return 0;
-  }
-  else {
-  filename = argv[1];
-  std::cout << filename << std::endl;
-  }
-  char somevar = filename[0];
-  printf("Loading Scene... use arrow keys to move around and Z and X to move up and down\n\n");
-  try {
-     if (plString(filename).afterFirst('.') == "age") {
-        ageLoadMode = 1;
-        plAgeInfo* age = rm.ReadAge(filename, true);
-        for (size_t i1 = 0; i1 < age->getNumPages(); i1++) {
-            LoadLocation(age->getPageLoc(i1,ver));
+	rm.setVer(ver, true);
+	plDebug::Init(plDebug::kDLAll);
+	if (argc < (int) 2) {
+		filename = "C:\\Kveer.age";
+		printf("expects prp-path as first argument\n");
+//		return 0;
+	}
+	else {
+		filename = argv[1];
+		std::cout << filename << std::endl;
+	}
+	char somevar = filename[0];
+	printf("Loading Scene... use arrow keys to move around and Z and X to move up and down\n\n");
+	if (plString(filename).afterLast('.') == "age") {
+		ageLoadMode = 1;
+		plAgeInfo* age = rm.ReadAge(filename, false);
+
+		//read the pages... because of the progress bar we can't leave this up to the resMgr with ReadAge
+        plString path = plString(filename).beforeLast(PATHSEP);
+        if (path.len() > 0)
+            path = path + PATHSEP;
+
+        if (age->getNumPages() > 0) {
+            plString file = plString::Format("%s_District_%s.prp",
+                    age->getAgeName().cstr(),
+                    age->getPage(0).fName.cstr());
+            FILE* F = fopen((path + file).cstr(), "rb");
+            if (F == NULL) {
+                rm.setVer(pvEoa, true);
+            } else {
+                rm.setVer(pvPots, true);
+                fclose(F);
+            }
         }
-        for (size_t i1 = 0; i1 < age->getNumCommonPages(ver); i1++) {
-            LoadLocation(age->getCommonPageLoc(i1,ver));
-        }
-     }
-     else if (plString(filename).afterFirst('.') == "prp") {
-         LoadLocation(rm.ReadPage(filename)->getLocation());
-        plString base = plString(filename).beforeLast('_');
-        if(base.endsWith("District")) {
-            plString texs = base + plString("_Textures.prp");
-            LoadLocation(rm.ReadPage(texs)->getLocation());
-        }
-     }
-  } catch (const hsException& e) {
-      plDebug::Error("%s:%lu: %s", e.File(), e.Line(), e.what());
-      return 0;
-  } catch (const std::exception& e) {
-      plDebug::Error("%s", e.what());
-      return 0;
-  } catch (...) {
-      plDebug::Error("Undefined error!");
-      return 0;
-  }
-  return 1;
+		int num_total_pages = age->getNumPages();
+		for (size_t i=0; i<age->getNumPages(); i++) {
+            rm.ReadPage(path + age->getPageFilename(i, rm.getVer()));
+	
+			float completed = ((float)i+1.0f)/(float)num_total_pages;
+			printf("UPDATING: %f\n",completed);
+			drawLoading(completed);
+		}
+		for (size_t i=0; i<age->getNumCommonPages(rm.getVer()); i++) {
+            rm.ReadPage(path + age->getCommonPageFilename(i, rm.getVer()));
+		}
+		//end of page-reading
+
+		for (size_t i1 = 0; i1 < age->getNumPages(); i1++) {
+			LoadLocation(age->getPageLoc(i1,ver));
+		}
+		for (size_t i1 = 0; i1 < age->getNumCommonPages(ver); i1++) {
+			LoadLocation(age->getCommonPageLoc(i1,ver));
+		}
+	}
+	else if (plString(filename).afterLast('.') == "prp") {
+		LoadLocation(rm.ReadPage(filename)->getLocation());
+		plString base = plString(filename).beforeLast('_');
+		if(base.endsWith("District")) {
+			plString texs = base + plString("_Textures.prp");
+			LoadLocation(rm.ReadPage(texs)->getLocation());
+		}
+	}
+	return 1;
 }
 
-
+  //} catch (const hsException& e) {
+  //    plDebug::Error("%s:%lu: %s", e.File(), e.Line(), e.what());
+  //    return 0;
+  //} catch (const std::exception& e) {
+  //    plDebug::Error("%s", e.what());
+  //    return 0;
+  //} catch (...) {
+  //    plDebug::Error("Undefined error!");
+  //    return 0;
+  //}
 
 int main(int argc, char* argv[]) {
-//int _tmain(int argc, char** argv) {
-    Load(argc, argv);
     const SDL_VideoInfo* info = NULL;
 
     if(SDL_Init(SDL_INIT_VIDEO ) < 0) {
@@ -337,6 +383,10 @@ int main(int argc, char* argv[]) {
     window_bpp = info->vfmt->BitsPerPixel;
     setVideoMode(window_w,window_h,window_flags,window_bpp);
 
+
+//prp stuff
+	drawLoading(0.0f); //give 'em something to look at before the first page loads
+	Load(argc, argv);
     prp_engine.LoadAllTextures(Textures);
     prp_engine.AppendAllObjectsToDrawList(SObjects);
 //    SortDrawableList();
