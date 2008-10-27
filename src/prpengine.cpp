@@ -83,6 +83,8 @@ void prpengine::AttemptToSetPlayerToLinkPointDefault(hsTArray<plKey> SObjects,ca
     curSpawnPoint = 0;
     if(!SetSpawnPoint(plString("LinkInPointDefault"), cam))
         printf("Couldn't find a link-in point\n");
+		printf("...Attempting to spawn to next spawn-point on list instead.\n");
+		NextSpawnPoint(cam);
 }
 
 void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
@@ -122,6 +124,7 @@ void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
                     break;
                 }
             }
+			dObj->isAnimPlaying = true;
             DrawableList.push_back(dObj);
         }
         SortDrawableList();
@@ -187,7 +190,7 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
 		hsGMaterial* material = hsGMaterial::Convert(materialkey->getObj());
 
 		plSpanTemplate* span = cluster->getTemplate();
-		renderClusterMesh(span->getVertices(),span->fIndices,span->fNumTris,material);
+//		renderClusterMesh(span->getVertices(),span->fIndices,span->fNumTris,material);
 	}
     return 1;
 }
@@ -427,11 +430,12 @@ void prpengine::draw(camera &cam) {
     SortDrawableList();
     for (size_t i=0; i < DrawableList.size(); i++) {
         DrawableObject *dObj = DrawableList[i];
-    //  printf("%d: %s\n", i, dObj->Owner->getName().cstr());
         glPushMatrix();
         if (dObj->hasCI) {
             glMultMatrixf(getMatrixFrom_hsMatrix44(DrawableList[i]->CIMat));
         }
+//		if (dObj->isAnimPlaying) {
+//		}
         if(dObj->vfm) {
             if(dObj->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
                 if(dObj->hasCI) {

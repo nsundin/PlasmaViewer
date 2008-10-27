@@ -81,11 +81,11 @@ void init() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClearAccum(0.0f, 0.0f, 0.0f, 0.0f);
-    if (ageLoadMode) {
-//        prp_engine.AttemptToSetFniSettings(plString(filename));
-    }
+//    if (ageLoadMode) {
+//	    prp_engine.AttemptToSetFniSettings(plString(filename));
+//    }
     prp_engine.AttemptToSetPlayerToLinkPointDefault(SObjects,cam);
 //  textmgr->printToScreen("Hello World!");
 }
@@ -101,8 +101,7 @@ void resize(int w, int h) {
 
 void draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
-//  glEnable(GL_POLYGON_OFFSET_FILL);
-//  glPolygonOffset(1.0, 1.0);
+//	std::cout << SDL_GetTicks() << std::endl;
     prp_engine.draw(cam);
     cam.update();
 //  textmgr->Render(window_w,window_h);
@@ -116,17 +115,17 @@ void drawLoading(float loaded) {
     glLoadIdentity();
     gluOrtho2D(0.0, (double)window_w, 0.0,(double)window_h);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glColor3f(1.0f,1.0f,1.0f);
+    glColor3f(1.0f,1.0f,1.0f);
 
-	glRectf(0.0f,10.f,window_w*loaded,0.0f);
-	//glBegin(GL_QUADS);
-	//glVertex2f(0.0f,10.f);
-	//glVertex2f(window_w,10.0f);
-	//glVertex2f(0.0f,0.0f);
-	//glVertex2f(window_w,0.0f);
-	//glEnd();
+    glRectf(0.0f,10.f,window_w*loaded,0.0f);
+    //glBegin(GL_QUADS);
+    //glVertex2f(0.0f,10.f);
+    //glVertex2f(window_w,10.0f);
+    //glVertex2f(0.0f,0.0f);
+    //glVertex2f(window_w,0.0f);
+    //glEnd();
 
-	SDL_GL_SwapBuffers();
+    SDL_GL_SwapBuffers();
 }
 void setVideoMode(int w,int h,int flags,int bpp) {
     if( SDL_SetVideoMode(w, h, bpp, flags) == 0 ) {
@@ -279,24 +278,22 @@ void LoadLocation(const plLocation &loc) {
     }
 }
 int Load(int argc, char** argv) {
-	rm.setVer(ver, true);
-	plDebug::Init(plDebug::kDLAll);
-	if (argc < (int) 2) {
-		filename = "C:\\Kveer.age";
-		printf("expects prp-path as first argument\n");
+    if (argc < (int) 2) {
+        filename = "C:\\Kveer.age";
+        printf("expects prp-path as first argument\n");
 //		return 0;
-	}
-	else {
-		filename = argv[1];
-		std::cout << filename << std::endl;
-	}
-	char somevar = filename[0];
-	printf("Loading Scene... use arrow keys to move around and Z and X to move up and down\n\n");
-	if (plString(filename).afterLast('.') == "age") {
-		ageLoadMode = 1;
-		plAgeInfo* age = rm.ReadAge(filename, false);
+    }
+    else {
+        filename = argv[1];
+        std::cout << filename << std::endl;
+    }
+    char somevar = filename[0];
+    printf("Loading Scene... use arrow keys to move around and Z and X to move up and down\n\n");
+    if (plString(filename).afterLast('.') == "age") {
+        ageLoadMode = 1;
+        plAgeInfo* age = rm.ReadAge(filename, false);
 
-		//read the pages... because of the progress bar we can't leave this up to the resMgr with ReadAge
+        //read the pages... because of the progress bar we can't leave this up to the resMgr with ReadAge
         plString path = plString(filename).beforeLast(PATHSEP);
         if (path.len() > 0)
             path = path + PATHSEP;
@@ -313,35 +310,39 @@ int Load(int argc, char** argv) {
                 fclose(F);
             }
         }
-		int num_total_pages = age->getNumPages();
-		for (size_t i=0; i<age->getNumPages(); i++) {
+        int num_total_pages = age->getNumPages();
+        for (size_t i=0; i<age->getNumPages(); i++) {
             rm.ReadPage(path + age->getPageFilename(i, rm.getVer()));
-	
-			float completed = ((float)i+1.0f)/(float)num_total_pages;
-			printf("UPDATING: %f\n",completed);
-			drawLoading(completed);
-		}
-		for (size_t i=0; i<age->getNumCommonPages(rm.getVer()); i++) {
+    
+            float completed = ((float)i+1.0f)/(float)num_total_pages;
+            printf("UPDATING: %f\n",completed);
+            drawLoading(completed);
+        }
+        for (size_t i=0; i<age->getNumCommonPages(rm.getVer()); i++) {
             rm.ReadPage(path + age->getCommonPageFilename(i, rm.getVer()));
-		}
-		//end of page-reading
+        }
+        //end of page-reading
 
-		for (size_t i1 = 0; i1 < age->getNumPages(); i1++) {
-			LoadLocation(age->getPageLoc(i1,ver));
-		}
-		for (size_t i1 = 0; i1 < age->getNumCommonPages(ver); i1++) {
-			LoadLocation(age->getCommonPageLoc(i1,ver));
-		}
-	}
-	else if (plString(filename).afterLast('.') == "prp") {
-		LoadLocation(rm.ReadPage(filename)->getLocation());
-		plString base = plString(filename).beforeLast('_');
-		if(base.endsWith("District")) {
-			plString texs = base + plString("_Textures.prp");
-			LoadLocation(rm.ReadPage(texs)->getLocation());
-		}
-	}
-	return 1;
+        for (size_t i1 = 0; i1 < age->getNumPages(); i1++) {
+            LoadLocation(age->getPageLoc(i1,ver));
+        }
+        for (size_t i1 = 0; i1 < age->getNumCommonPages(ver); i1++) {
+            LoadLocation(age->getCommonPageLoc(i1,ver));
+        }
+    }
+    else if (plString(filename).afterLast('.') == "prp") {
+        LoadLocation(rm.ReadPage(filename)->getLocation());
+        plString base = plString(filename).beforeLast('_');
+        if(base.endsWith("District")) {
+            plString texs = base + plString("_Textures.prp");
+            LoadLocation(rm.ReadPage(texs)->getLocation());
+        }
+        else {
+            plString texs = base + plString("_Textures.prp");
+            LoadLocation(rm.ReadPage(texs)->getLocation());
+        }
+    }
+    return 1;
 }
 
   //} catch (const hsException& e) {
@@ -385,8 +386,16 @@ int main(int argc, char* argv[]) {
 
 
 //prp stuff
-	drawLoading(0.0f); //give 'em something to look at before the first page loads
-	Load(argc, argv);
+    rm.setVer(ver, true);
+    //if (ver == pvEoa) {
+    //	plDebug::Init(plDebug::kDLNone);
+    //}
+    //else {
+    plDebug::Init(plDebug::kDLAll);
+    //}
+
+    drawLoading(0.0f); //give 'em something to look at before the first page loads
+    Load(argc, argv);
     prp_engine.LoadAllTextures(Textures);
     prp_engine.AppendAllObjectsToDrawList(SObjects);
 //    SortDrawableList();
