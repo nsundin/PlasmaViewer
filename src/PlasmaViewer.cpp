@@ -110,25 +110,41 @@ void draw() {
 }
 
 void drawLoading(float loaded) {
+	printf("drawLoading: %f\n",loaded);
     glViewport(0, 0, window_w, window_h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(0.0, (double)window_w, 0.0,(double)window_h);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glColor3f(1.0f,1.0f,1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(0.27f,0.46f,0.33f);
 
-    glRectf(0.0f,10.f,window_w*loaded,0.0f);
-    //glBegin(GL_QUADS);
-    //glVertex2f(0.0f,10.f);
-    //glVertex2f(window_w,10.0f);
-    //glVertex2f(0.0f,0.0f);
-    //glVertex2f(window_w,0.0f);
-    //glEnd();
+	float fullbarwidth = window_w-50.0f; //foobarwidth anyone?
+
+	float barwidth = (window_w-100.0f)*loaded;
+
+    glRectf(50.0f, 67.0f, barwidth+50.0f, 52.0f);
+
+////    glBegin(GL_POLYGON);
+	glBegin(GL_LINES);
+	//top line
+	glVertex2f(48.0f,68.0f);
+    glVertex2f(fullbarwidth+2.0f,68.0f);
+	//left line
+	glVertex2f(48.0f,68.0f);
+	glVertex2f(48.0f,50.0f);
+	//right line
+    glVertex2f(fullbarwidth+2.0f,68.0f);
+    glVertex2f(fullbarwidth+2.0f,50.0f);
+	//bottom line
+	glVertex2f(48.0f,50.0f);
+    glVertex2f(fullbarwidth+2.0f,50.0f);
+	glEnd();
 
     SDL_GL_SwapBuffers();
 }
 void setVideoMode(int w,int h,int flags,int bpp) {
-    if( SDL_SetVideoMode(w, h, bpp, flags) == 0 ) {
+    if (SDL_SetVideoMode(w, h, bpp, flags) == 0 ) {
         printf("[FAIL] SDL_SetVideoMode: %s\n", SDL_GetError());
         quit(1);
     }
@@ -315,11 +331,10 @@ int Load(int argc, char** argv) {
         }
         int num_total_pages = age->getNumPages();
         for (size_t i=0; i<age->getNumPages(); i++) {
-            rm.ReadPage(path + age->getPageFilename(i, rm.getVer()));
-    
+			rm.ReadPage(path + age->getPageFilename(i, rm.getVer()));
             float completed = ((float)i+1.0f)/(float)num_total_pages;
-            printf("UPDATING: %f\n",completed);
-            drawLoading(completed);
+			ProcessEvents();
+			drawLoading(completed);
         }
         for (size_t i=0; i<age->getNumCommonPages(rm.getVer()); i++) {
             rm.ReadPage(path + age->getCommonPageFilename(i, rm.getVer()));
@@ -336,14 +351,11 @@ int Load(int argc, char** argv) {
     else if (plString(filename).afterLast('.') == "prp") {
         LoadLocation(rm.ReadPage(filename)->getLocation());
         plString base = plString(filename).beforeLast('_');
-        if(base.endsWith("District")) {
-            plString texs = base + plString("_Textures.prp");
-            LoadLocation(rm.ReadPage(texs)->getLocation());
-        }
-        else {
-            plString texs = base + plString("_Textures.prp");
-            LoadLocation(rm.ReadPage(texs)->getLocation());
-        }
+		try {
+			plString texs = base + plString("_Textures.prp");
+			LoadLocation(rm.ReadPage(texs)->getLocation());
+		}
+		catch(...) {}
     }
     return 1;
 }

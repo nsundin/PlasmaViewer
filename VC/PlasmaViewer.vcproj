@@ -137,6 +137,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="OpenGL32.lib Plasma.lib glu32.lib  sdl.lib sdlmain.lib"
+				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\Owner\Desktop\Plasma_lib\Plasma\bin&quot;"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

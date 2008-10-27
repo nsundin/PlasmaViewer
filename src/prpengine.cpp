@@ -80,11 +80,12 @@ void prpengine::AttemptToSetPlayerToLinkPointDefault(hsTArray<plKey> SObjects,ca
         if(getModifierOfType(plSceneObject::Convert(SObjects[i]->getObj()), plSpawnModifier::Convert))
             SpawnPoints.push(SObjects[i]);
     }
-    curSpawnPoint = 0;
-    if(!SetSpawnPoint(plString("LinkInPointDefault"), cam))
+//    curSpawnPoint = 0;
+	if(!SetSpawnPoint(plString("LinkInPointDefault"), cam)) {
         printf("Couldn't find a link-in point\n");
 		printf("...Attempting to spawn to next spawn-point on list instead.\n");
 		NextSpawnPoint(cam);
+	}
 }
 
 void prpengine::AddClusterGroupToDrawableList(plKey clustergroupkey) {
