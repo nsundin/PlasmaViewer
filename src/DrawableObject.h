@@ -7,10 +7,11 @@
 #include "PRP/KeyedObject/plKey.h"
 #include "PRP/Object/plDrawInterface.h"
 #include "PRP/Animation/plViewFaceModifier.h"
+#include "PRP/Geometry/plClusterGroup.h"
 
 class DrawableObject {
 public:
-	plKey ClusterKey;
+	plClusterGroup* ClusterGroup;
 	bool isCluster;
 
 	bool isAnimPlaying;

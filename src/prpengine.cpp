@@ -87,6 +87,25 @@ void prpengine::AttemptToSetPlayerToLinkPointDefault(hsTArray<plKey> SObjects,ca
 		NextSpawnPoint(cam);
 }
 
+void prpengine::AddClusterGroupToDrawableList(plKey clustergroupkey) {
+	DrawableObject* dObj = new DrawableObject;
+
+	plClusterGroup* cluster = plClusterGroup::Convert(clustergroupkey->getObj());
+	dObj->isCluster = true;
+	dObj->ClusterGroup = cluster;
+	dObj->renderlevel = cluster->getRenderLevel();
+	DrawableList.push_back(dObj);
+	SortDrawableList();
+}
+
+void prpengine::AddAllClustersToDrawableList(std::vector<plKey> clusters) {
+    for (size_t i = 0; i < clusters.size(); i++) {
+		if (clusters[i].Exists()) {
+			AddClusterGroupToDrawableList(clusters[i]);
+			printf("ADDED CLUSTER: %s\n",clusters[i]->getName().cstr());
+		}
+	}
+}
 void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
     plSceneObject* obj = plSceneObject::Convert(sobjectkey->getObj());
     if (obj->getDrawInterface().Exists()) {
@@ -116,6 +135,7 @@ void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
             dObj->renderlevel = span->getRenderLevel();
             dObj->spanflags = span->getProps();
             dObj->draw = draw;
+			dObj->isCluster = false;
             dObj->vfm = 0;
             for(size_t i = 0; i < obj->getNumModifiers(); i++) {
                 plViewFaceModifier * vfm = plViewFaceModifier::Convert(obj->getModifier(i)->getObj());
@@ -163,8 +183,7 @@ void prpengine::AttemptToSetFniSettings(plString filename) {
 }
 
 int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam) {
-//	if (!dObj->isCluster) {
-	if (true) {
+	if (!dObj->isCluster) {
 		plDrawableSpans* span = plDrawableSpans::Convert(dObj->SpanKey->getObj());
 		plDISpanIndex di = span->getDIIndex(dObj->DrawableKey);
 		if ((di.fFlags & plDISpanIndex::kMatrixOnly) != 0) {
@@ -182,15 +201,13 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
 		}
 	}
 	else {
-		plClusterGroup* cluster = plClusterGroup::Convert(dObj->ClusterKey->getObj());
-		
-		plKey materialkey = cluster->fMaterial;
+		plKey materialkey = dObj->ClusterGroup->getMaterial();
 		if (!materialkey.isLoaded())
 			return 0;
 		hsGMaterial* material = hsGMaterial::Convert(materialkey->getObj());
 
-		plSpanTemplate* span = cluster->getTemplate();
-//		renderClusterMesh(span->getVertices(),span->fIndices,span->fNumTris,material);
+		plSpanTemplate* span = dObj->ClusterGroup->getTemplate();
+		renderClusterMesh(span->getVertices(),span->getIndices(),span->getNumTris(),material);
 	}
     return 1;
 }
@@ -430,27 +447,40 @@ void prpengine::draw(camera &cam) {
     SortDrawableList();
     for (size_t i=0; i < DrawableList.size(); i++) {
         DrawableObject *dObj = DrawableList[i];
-        glPushMatrix();
-        if (dObj->hasCI) {
-            glMultMatrixf(getMatrixFrom_hsMatrix44(DrawableList[i]->CIMat));
-        }
-//		if (dObj->isAnimPlaying) {
-//		}
-        if(dObj->vfm) {
-            if(dObj->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
-                if(dObj->hasCI) {
-                    float camV[3], objV[3];
-                    for(int i = 0; i < 3; i++) {
-                        camV[i] = cam.getCamPos(i);
-                        objV[i] = dObj->CIMat(i,3);
-                    }
-                    l3dBillboardSphericalBegin(camV, objV);
-                }
-            }
-        }
-        glCallList(gl_renderlist+dObj->RenderIndex);
-        //RenderDrawable(dObj,1,cam);
-        glPopMatrix();
+        if (dObj->isCluster) {
+			for (size_t clusteridx = 0; clusteridx < dObj->ClusterGroup->getNumClusters(); clusteridx++) {
+				plCluster* c = dObj->ClusterGroup->getCluster(clusteridx);
+				for(size_t inst = 0; inst < c->getNumInstances(); inst++) {
+					glPushMatrix();
+					glMultMatrixf(getMatrixFrom_hsMatrix44(c->getInstance(inst)->getLocalToWorld()));
+					glCallList(gl_renderlist+dObj->RenderIndex);
+					glPopMatrix();
+				}
+			}
+		}
+		else {
+			glPushMatrix();
+			if (dObj->hasCI) {
+				glMultMatrixf(getMatrixFrom_hsMatrix44(DrawableList[i]->CIMat));
+			}
+//			if (dObj->isAnimPlaying) {
+//			}
+			if(dObj->vfm) {
+				if(dObj->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
+					if(dObj->hasCI) {
+						float camV[3], objV[3];
+						for(int i = 0; i < 3; i++) {
+							camV[i] = cam.getCamPos(i);
+							objV[i] = dObj->CIMat(i,3);
+						}
+						l3dBillboardSphericalBegin(camV, objV);
+					}
+				}
+			}
+			glCallList(gl_renderlist+dObj->RenderIndex);
+			//RenderDrawable(dObj,1,cam);
+			glPopMatrix();
+		}
     }
 }
 

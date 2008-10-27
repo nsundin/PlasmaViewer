@@ -270,16 +270,19 @@ void appendSObj(plKey sobjectkey) {
 void LoadLocation(const plLocation &loc) {
     std::vector<plKey> mipkeys = rm.getKeys(loc, kMipmap);
     std::vector<plKey> so_s = rm.getKeys(loc, kSceneObject);
+	std::vector<plKey> cgroup = rm.getKeys(loc, kClusterGroup);
     for (size_t i = 0; i < mipkeys.size(); i++) {
         appendTexture(mipkeys[i]);
     }
     for (size_t i = 0; i < so_s.size(); i++) {
         appendSObj(so_s[i]);
     }
+	prp_engine.AddAllClustersToDrawableList(cgroup);
 }
 int Load(int argc, char** argv) {
     if (argc < (int) 2) {
-        filename = "C:\\Kveer.age";
+        filename = "C:\\Personal_District_psnlMYSTII.prp";//Kveer.age";
+
         printf("expects prp-path as first argument\n");
 //		return 0;
     }

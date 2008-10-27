@@ -31,6 +31,7 @@
 #include "PRP/Surface/plLayer.h"
 #include "PRP/Modifier/plSpawnModifier.h"
 #include "PRP/Geometry/plClusterGroup.h"
+#include "PRP/Geometry/plCluster.h"
 #include "PRP/Geometry/plSpanTemplate.h"
 #include "camera.h"
 #include "viewer_fni.h"
@@ -46,7 +47,8 @@ public:
 
 	void SortDrawableList();
 	void PrintObjects();
-
+	void AddClusterGroupToDrawableList(plKey clustergroupkey);
+	void AddAllClustersToDrawableList(std::vector<plKey> clusters);
 	void AttemptToSetPlayerToLinkPointDefault(hsTArray<plKey> SObjects,camera &cam);
 	void AddSceneObjectToDrawableList(plKey sobjectkey);
 	void AppendAllObjectsToDrawList(hsTArray<plKey> SObjects);
