@@ -126,19 +126,11 @@ void drawLoading(float loaded) {
     glRectf(50.0f, 67.0f, barwidth+50.0f, 52.0f);
 
 ////    glBegin(GL_POLYGON);
-	glBegin(GL_LINES);
-	//top line
+	glBegin(GL_LINE_LOOP);
 	glVertex2f(48.0f,68.0f);
     glVertex2f(fullbarwidth+2.0f,68.0f);
-	//left line
-	glVertex2f(48.0f,68.0f);
-	glVertex2f(48.0f,50.0f);
-	//right line
-    glVertex2f(fullbarwidth+2.0f,68.0f);
     glVertex2f(fullbarwidth+2.0f,50.0f);
-	//bottom line
 	glVertex2f(48.0f,50.0f);
-    glVertex2f(fullbarwidth+2.0f,50.0f);
 	glEnd();
 
     SDL_GL_SwapBuffers();
