@@ -68,7 +68,7 @@ private:
 	std::vector<DrawableObject*> DrawableList;
 	hsTArray<plKey> SpawnPoints;
 	int curSpawnPoint;
-	void renderClusterMesh(hsTArray<plSpanTemplate::Vertex> verts, unsigned short* indices, int NumTris,hsGMaterial* material);
+	void renderClusterMesh(hsTArray<plSpanTemplate::Vertex> verts, const unsigned short* indices, int NumTris,hsGMaterial* material);
 	void renderSpanMesh(hsTArray<plGBufferVertex> verts, hsTArray<unsigned short> indices,hsGMaterial* material,bool isWaveset, float WaterHeight);
 	void SetLayerParams(plLayerInterface* layer);
 	int RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam);

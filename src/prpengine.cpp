@@ -63,7 +63,7 @@ void prpengine::SetSpawnPoint(int idx, camera &cam) {
 }
 bool prpengine::SetSpawnPoint(plString name, camera &cam) {
     for (size_t i = 0; i < SpawnPoints.getSize(); i++) {
-        if (name == SpawnPoints[i]->getName())
+		if ((const plString)"LinkInPointDefault" == SpawnPoints[i]->getName())
         {
             SetSpawnPoint(i, cam);
             return true;
@@ -207,15 +207,15 @@ int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam)
 			return 0;
 		hsGMaterial* material = hsGMaterial::Convert(materialkey->getObj());
 
-		plSpanTemplate* span = dObj->ClusterGroup->getTemplate();
-		renderClusterMesh(span->getVertices(),span->getIndices(),span->getNumTris(),material);
+		plSpanTemplate span = dObj->ClusterGroup->getTemplate();
+		renderClusterMesh(span.getVertices(),span.getIndices(),span.getNumTris(),material);
 	}
     return 1;
 }
 
 
 
-void prpengine::renderClusterMesh(hsTArray<plSpanTemplate::Vertex> verts, unsigned short* indices, int NumTris, hsGMaterial* material) {
+void prpengine::renderClusterMesh(hsTArray<plSpanTemplate::Vertex> verts, const unsigned short* indices, int NumTris, hsGMaterial* material) {
 	for (size_t layeridx = 0; layeridx < material->getNumLayers(); layeridx++) {
 		plKey layerkey = material->getLayer(layeridx);
 		plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
@@ -229,7 +229,7 @@ void prpengine::renderClusterMesh(hsTArray<plSpanTemplate::Vertex> verts, unsign
 			pos = verts[indice].fPosition;		
 			hsVector3 uvw = verts[indice].fUVWs[uvSrc] * layer->getTransform();
 			glTexCoord2f(uvw.X,uvw.Y);
-			hsColor32 col = verts[indice].fColor;
+			hsColor32 col = verts[indice].fColor1;
 			glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
 			glNormal3f(verts[indice].fNormal.X,verts[indice].fNormal.Y,verts[indice].fNormal.Z);
 			glVertex3f(pos.X,pos.Y ,pos.Z);

@@ -109,67 +109,6 @@ void draw() {
     SDL_GL_SwapBuffers();
 }
 
-void drawLoading(float loaded) {
-	printf("drawLoading: %f\n",loaded);
-    glViewport(0, 0, window_w, window_h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0.0, (double)window_w, 0.0,(double)window_h);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(0.27f,0.46f,0.33f);
-
-	float fullbarwidth = window_w-50.0f; //foobarwidth anyone?
-
-	float barwidth = (window_w-100.0f)*loaded;
-
-    glRectf(50.0f, 67.0f, barwidth+50.0f, 52.0f);
-
-////    glBegin(GL_POLYGON);
-	glBegin(GL_LINE_LOOP);
-	glVertex2f(48.0f,68.0f);
-    glVertex2f(fullbarwidth+2.0f,68.0f);
-    glVertex2f(fullbarwidth+2.0f,50.0f);
-	glVertex2f(48.0f,50.0f);
-	glEnd();
-
-    SDL_GL_SwapBuffers();
-}
-void setVideoMode(int w,int h,int flags,int bpp) {
-    if (SDL_SetVideoMode(w, h, bpp, flags) == 0 ) {
-        printf("[FAIL] SDL_SetVideoMode: %s\n", SDL_GetError());
-        quit(1);
-    }
-}
-
-void MotionHandler() {
-    if (isMovingForward) {
-        if (isShift) {
-            cam.moveLocalZ(1.0f);
-        }
-        else {
-            cam.moveLocalZ(0.45f);
-        }
-    }
-    if (isMovingBackward) {
-        cam.moveLocalZ(-0.45f);
-    }
-    if (isTurningRight) {
-        cam.angle += 0.025f;
-        cam.turn();
-    }
-    if (isTurningLeft) {
-        cam.angle -= 0.025f;
-        cam.turn();
-    }
-    if (isMovingUp) {
-        cam.moveLocalY(0.45f);
-    }
-    if (isMovingDown) {
-        cam.moveLocalY(-0.45f);
-    }
-}
-
 static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
     switch(keysym->sym) {
         case SDLK_ESCAPE:
@@ -237,7 +176,6 @@ static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
     }
 }
 
-
 void ProcessEvents() {
     SDL_Event event;
     while(SDL_PollEvent(&event)) {
@@ -262,6 +200,88 @@ void ProcessEvents() {
         }
     }
 }
+
+void drawLoading(float loaded, float loaded2) {
+	const float inset = 48.0f;
+	static float primary = 0.0, secondary = 0.0;
+	if(loaded >= 0.0) primary = loaded;
+	if(loaded2 >= 0.0) secondary = loaded2;
+	printf("drawLoading: %f/%f\n",primary,secondary);
+    glViewport(0, 0, window_w, window_h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0.0, (double)window_w, 0.0,(double)window_h);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(0.27f,0.46f,0.33f);
+
+	float fullbarwidth = window_w-inset*2.0-4.0; //foobarwidth anyone?
+
+	float barwidth = fullbarwidth*primary;
+	float barwidth2 = fullbarwidth*secondary;
+
+    glRectf(inset+2.0f, 67.0f, inset+2.0+barwidth, 52.0f);
+
+////    glBegin(GL_POLYGON);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(inset,68.0f);
+    glVertex2f(window_w-inset-1.0,68.0f);
+    glVertex2f(window_w-inset-1.0,50.0f);
+	glVertex2f(inset,50.0f);
+	glEnd();
+
+	if(secondary > 0.0) {
+		glRectf(inset+2.0f, 97.0f, inset+2.0+barwidth2, 82.0f);
+
+	////    glBegin(GL_POLYGON);
+		glBegin(GL_LINE_LOOP);
+		glVertex2f(inset,98.0f);
+		glVertex2f(window_w-inset-1.0,98.0f);
+		glVertex2f(window_w-inset-1.0,80.0f);
+		glVertex2f(inset,80.0f);
+		glEnd();
+	}
+	SDL_GL_SwapBuffers();
+	ProcessEvents();
+}
+void drawSecondaryProgress(float progress) {
+	drawLoading(-1.0, progress);
+}
+void setVideoMode(int w,int h,int flags,int bpp) {
+    if (SDL_SetVideoMode(w, h, bpp, flags) == 0 ) {
+        printf("[FAIL] SDL_SetVideoMode: %s\n", SDL_GetError());
+        quit(1);
+    }
+}
+
+void MotionHandler() {
+    if (isMovingForward) {
+        if (isShift) {
+            cam.moveLocalZ(1.0f);
+        }
+        else {
+            cam.moveLocalZ(0.45f);
+        }
+    }
+    if (isMovingBackward) {
+        cam.moveLocalZ(-0.45f);
+    }
+    if (isTurningRight) {
+        cam.angle += 0.025f;
+        cam.turn();
+    }
+    if (isTurningLeft) {
+        cam.angle -= 0.025f;
+        cam.turn();
+    }
+    if (isMovingUp) {
+        cam.moveLocalY(0.45f);
+    }
+    if (isMovingDown) {
+        cam.moveLocalY(-0.45f);
+    }
+}
+
 
 void appendTexture(plKey texturekey) {
     if (texturekey.Exists() && texturekey.isLoaded()) {
@@ -322,15 +342,19 @@ int Load(int argc, char** argv) {
             }
         }
         int num_total_pages = age->getNumPages();
+		drawLoading(0.0, 0.0);
+		ProgressCallback old = rm.SetProgressFunc(&drawSecondaryProgress);
         for (size_t i=0; i<age->getNumPages(); i++) {
 			rm.ReadPage(path + age->getPageFilename(i, rm.getVer()));
             float completed = ((float)i+1.0f)/(float)num_total_pages;
-			ProcessEvents();
-			drawLoading(completed);
+//			ProcessEvents();
+			drawLoading(completed, 0.0);
+//			ProcessEvents();
         }
         for (size_t i=0; i<age->getNumCommonPages(rm.getVer()); i++) {
             rm.ReadPage(path + age->getCommonPageFilename(i, rm.getVer()));
         }
+		rm.SetProgressFunc(old);
         //end of page-reading
 
         for (size_t i1 = 0; i1 < age->getNumPages(); i1++) {
@@ -401,7 +425,7 @@ int main(int argc, char* argv[]) {
     plDebug::Init(plDebug::kDLAll);
     //}
 
-    drawLoading(0.0f); //give 'em something to look at before the first page loads
+    //drawLoading(0.0f); //give 'em something to look at before the first page loads
     Load(argc, argv);
     prp_engine.LoadAllTextures(Textures);
     prp_engine.AppendAllObjectsToDrawList(SObjects);
