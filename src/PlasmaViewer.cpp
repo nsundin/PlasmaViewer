@@ -54,6 +54,7 @@ int window_bpp = 0;
 int window_flags = 0;
 int window_w = 1;
 int window_h = 1;
+bool isFullScreen = false;
 //end of window info
 
 
@@ -108,6 +109,14 @@ void draw() {
     glFlush();
     SDL_GL_SwapBuffers();
 }
+
+void setWindowed() {
+	window_flags = SDL_OPENGL | SDL_HWSURFACE | SDL_RESIZABLE;//SDL_OPENGL | SDL_RESIZABLE;
+}
+//void setFullScreen() {
+//	window_flags = SDL_OPENGL | SDL_HWSURFACE | SDL_FULLSCREEN;
+//	SDL_SetVideoMode(window_w, window_h, window_bpp, window_flags);
+//}
 
 static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
     switch(keysym->sym) {
@@ -171,6 +180,20 @@ static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
             if (type == SDL_KEYDOWN) isShift = true;
             else isShift = false;
             break;
+		case SDLK_F11:
+			if (type == SDL_KEYDOWN) {
+				printf("F11\n");
+				if (isFullScreen) {
+					printf("WINDOWED\n");
+					setWindowed();
+//					isFullScreen = false;
+				}
+//				else {
+//					printf("FULL\n");
+//					setFullScreen();
+//					isFullScreen = true;
+//				}
+			}
         default:
             break;
     }
@@ -186,14 +209,14 @@ void ProcessEvents() {
 //            }
             break;
         }
-   //     if (event.type == SDL_VIDEORESIZE) {
-            //printf("RESIZE!!!\n");
-   //         window_w = event.resize.w;
-   //         window_h = event.resize.h;
-   //         setVideoMode(window_w,window_h,window_flags,window_bpp);
-   //         resize(window_w, window_h);
-   //         break;
-   //     }
+        if (event.type == SDL_VIDEORESIZE) {
+   //printf("RESIZE!!!\n");
+            window_w = event.resize.w;
+            window_h = event.resize.h;
+//            setVideoMode(window_w,window_h,window_flags,window_bpp);
+            resize(window_w, window_h);
+            break;
+        }
         if (event.type == SDL_QUIT) {
             quit(0);
             break;
@@ -202,57 +225,52 @@ void ProcessEvents() {
 }
 
 void drawLoading(float loaded, float loaded2) {
-	const float inset = 48.0f;
-	static float primary = 0.0, secondary = 0.0;
-	if(loaded >= 0.0) primary = loaded;
-	if(loaded2 >= 0.0) secondary = loaded2;
-	printf("drawLoading: %f/%f\n",primary,secondary);
+    const float inset = 48.0f;
+    static float primary = 0.0, secondary = 0.0;
+    if(loaded >= 0.0) primary = loaded;
+    if(loaded2 >= 0.0) secondary = loaded2;
+    printf("drawLoading: %f/%f\n",primary,secondary);
     glViewport(0, 0, window_w, window_h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(0.0, (double)window_w, 0.0,(double)window_h);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(0.27f,0.46f,0.33f);
 
-	float fullbarwidth = window_w-inset*2.0-4.0; //foobarwidth anyone?
+    float fullbarwidth = window_w-inset*2.0-4.0; //foobarwidth anyone?
 
-	float barwidth = fullbarwidth*primary;
-	float barwidth2 = fullbarwidth*secondary;
+    float barwidth = fullbarwidth*primary;
+    float barwidth2 = fullbarwidth*secondary;
 
     glRectf(inset+2.0f, 67.0f, inset+2.0+barwidth, 52.0f);
 
 ////    glBegin(GL_POLYGON);
-	glBegin(GL_LINE_LOOP);
-	glVertex2f(inset,68.0f);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(inset,68.0f);
     glVertex2f(window_w-inset-1.0,68.0f);
     glVertex2f(window_w-inset-1.0,50.0f);
-	glVertex2f(inset,50.0f);
-	glEnd();
+    glVertex2f(inset,50.0f);
+    glEnd();
 
-	if(secondary > 0.0) {
-		glRectf(inset+2.0f, 97.0f, inset+2.0+barwidth2, 82.0f);
+    if(secondary > 0.0) {
+        glRectf(inset+2.0f, 97.0f, inset+2.0+barwidth2, 82.0f);
 
-	////    glBegin(GL_POLYGON);
-		glBegin(GL_LINE_LOOP);
-		glVertex2f(inset,98.0f);
-		glVertex2f(window_w-inset-1.0,98.0f);
-		glVertex2f(window_w-inset-1.0,80.0f);
-		glVertex2f(inset,80.0f);
-		glEnd();
-	}
-	SDL_GL_SwapBuffers();
-	ProcessEvents();
+    ////    glBegin(GL_POLYGON);
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(inset,98.0f);
+        glVertex2f(window_w-inset-1.0,98.0f);
+        glVertex2f(window_w-inset-1.0,80.0f);
+        glVertex2f(inset,80.0f);
+        glEnd();
+    }
+    SDL_GL_SwapBuffers();
+    ProcessEvents();
 }
 void drawSecondaryProgress(float progress) {
-	drawLoading(-1.0, progress);
+    drawLoading(-1.0, progress);
 }
-void setVideoMode(int w,int h,int flags,int bpp) {
-    if (SDL_SetVideoMode(w, h, bpp, flags) == 0 ) {
-        printf("[FAIL] SDL_SetVideoMode: %s\n", SDL_GetError());
-        quit(1);
-    }
-}
+
 
 void MotionHandler() {
     if (isMovingForward) {
@@ -298,14 +316,14 @@ void appendSObj(plKey sobjectkey) {
 void LoadLocation(const plLocation &loc) {
     std::vector<plKey> mipkeys = rm.getKeys(loc, kMipmap);
     std::vector<plKey> so_s = rm.getKeys(loc, kSceneObject);
-	std::vector<plKey> cgroup = rm.getKeys(loc, kClusterGroup);
+    std::vector<plKey> cgroup = rm.getKeys(loc, kClusterGroup);
     for (size_t i = 0; i < mipkeys.size(); i++) {
         appendTexture(mipkeys[i]);
     }
     for (size_t i = 0; i < so_s.size(); i++) {
         appendSObj(so_s[i]);
     }
-	prp_engine.AddAllClustersToDrawableList(cgroup);
+    prp_engine.AddAllClustersToDrawableList(cgroup);
 }
 int Load(int argc, char** argv) {
     if (argc < (int) 2) {
@@ -342,19 +360,19 @@ int Load(int argc, char** argv) {
             }
         }
         int num_total_pages = age->getNumPages();
-		drawLoading(0.0, 0.0);
-		ProgressCallback old = rm.SetProgressFunc(&drawSecondaryProgress);
+        drawLoading(0.0, 0.0);
+        ProgressCallback old = rm.SetProgressFunc(&drawSecondaryProgress);
         for (size_t i=0; i<age->getNumPages(); i++) {
-			rm.ReadPage(path + age->getPageFilename(i, rm.getVer()));
+            rm.ReadPage(path + age->getPageFilename(i, rm.getVer()));
             float completed = ((float)i+1.0f)/(float)num_total_pages;
 //			ProcessEvents();
-			drawLoading(completed, 0.0);
+            drawLoading(completed, 0.0);
 //			ProcessEvents();
         }
         for (size_t i=0; i<age->getNumCommonPages(rm.getVer()); i++) {
             rm.ReadPage(path + age->getCommonPageFilename(i, rm.getVer()));
         }
-		rm.SetProgressFunc(old);
+        rm.SetProgressFunc(old);
         //end of page-reading
 
         for (size_t i1 = 0; i1 < age->getNumPages(); i1++) {
@@ -367,11 +385,11 @@ int Load(int argc, char** argv) {
     else if (plString(filename).afterLast('.') == "prp") {
         LoadLocation(rm.ReadPage(filename)->getLocation());
         plString base = plString(filename).beforeLast('_');
-		try {
-			plString texs = base + plString("_Textures.prp");
-			LoadLocation(rm.ReadPage(texs)->getLocation());
-		}
-		catch(...) {}
+        try {
+            plString texs = base + plString("_Textures.prp");
+            LoadLocation(rm.ReadPage(texs)->getLocation());
+        }
+        catch(...) {}
     }
     return 1;
 }
@@ -411,10 +429,13 @@ int main(int argc, char* argv[]) {
 
     window_w = 800;//1280;
     window_h = 600;//1024;
-    window_flags = SDL_OPENGL;// | SDL_RESIZABLE;// | SDL_NOFRAME | //SDL_FULLSCREEN;
+    setWindowed(); //SDL_NOFRAME like linkpanel O.O
     window_bpp = info->vfmt->BitsPerPixel;
-    setVideoMode(window_w,window_h,window_flags,window_bpp);
 
+    if (SDL_SetVideoMode(window_w, window_h, window_bpp, window_flags) == 0 ) {
+        printf("[FAIL] SDL_SetVideoMode: %s\n", SDL_GetError());
+        quit(1);
+    }
 
 //prp stuff
     rm.setVer(ver, true);

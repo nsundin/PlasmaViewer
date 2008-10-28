@@ -95,6 +95,7 @@ void prpengine::AddClusterGroupToDrawableList(plKey clustergroupkey) {
 	dObj->isCluster = true;
 	dObj->ClusterGroup = cluster;
 	dObj->renderlevel = cluster->getRenderLevel();
+	dObj->Owner = clustergroupkey;
 	DrawableList.push_back(dObj);
 	SortDrawableList();
 }
@@ -247,12 +248,14 @@ void prpengine::renderSpanMesh(hsTArray<plGBufferVertex> verts, hsTArray<unsigne
 		glBegin(GL_TRIANGLES);
 		for (size_t j = 0; j < indices.getSize(); j++) {
 			int indice = indices[j];
-			hsVector3 pos;		
+			hsVector3 pos;
 			pos = verts[indice].fPos;		
 			hsVector3 uvw = verts[indice].fUVWs[uvSrc] * layer->getTransform();
 			glTexCoord2f(uvw.X,uvw.Y);
+
 			hsColor32 col = verts[indice].fColor;
 			glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
+			
 			glNormal3f(verts[indice].fNormal.X,verts[indice].fNormal.Y,verts[indice].fNormal.Z);
 			if (isWaveset)
 				glVertex3f(pos.X,pos.Y, WaterHeight);
