@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="OpenGL32.lib Plasma.lib glu32.lib  sdl.lib sdlmain.lib"
+				AdditionalDependencies="OpenGL32.lib Plasma.lib glu32.lib sdl.lib sdlmain.lib sdl_ttf.lib"
 				GenerateDebugInformation="true"
 				EntryPointSymbol="mainCRTStartup"
 				TargetMachine="1"
