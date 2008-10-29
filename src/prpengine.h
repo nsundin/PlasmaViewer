@@ -42,37 +42,43 @@
 class prpengine {
 public:
 	void draw(camera &cam);
-	void LoadAllTextures(hsTArray<plKey> Textures);
-	void UpdateList(hsTArray<plKey> SObjects,bool wireframe, bool firstTime, camera &cam);
+	void LoadTextures(std::vector<plKey> Textures);
+	void UpdateList(bool wireframe, bool firstTime, camera &cam);
 
 	void SortDrawableList();
 	void PrintObjects();
+
 	void AddClusterGroupToDrawableList(plKey clustergroupkey);
-	void AddAllClustersToDrawableList(std::vector<plKey> clusters);
-	void AttemptToSetPlayerToLinkPointDefault(hsTArray<plKey> SObjects,camera &cam);
+	void AppendClustersToDrawList(std::vector<plKey> clusters);
+
+
+	void AttemptToSetPlayerToLinkPointDefault(std::vector<plKey> SObjects,camera &cam);
 	void AddSceneObjectToDrawableList(plKey sobjectkey);
-	void AppendAllObjectsToDrawList(hsTArray<plKey> SObjects);
+	void AppendObjectsToDrawList(std::vector<plKey> SObjects);
+
+
 	void AttemptToSetFniSettings(plString filename);
 	void NextSpawnPoint(camera &cam);
 	void PrevSpawnPoint(camera &cam);
 	bool SetSpawnPoint(plString name, camera &cam);
 	//bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs);
 private:
+	std::vector<TextureObject*> TextureList;
+	std::vector<DrawableObject*> DrawableList;
+	
 	GLint gl_renderlist;
 	GLint gl_rendercount;
 	GLuint* gl_texlist;
 	int getTextureIDFromKey(plKey key);
 	int loadHeadSpinMipmapTexture(plKey mipmapkey,int texname);
-	
-	std::vector<TextureObject*> TextureList;
-	std::vector<DrawableObject*> DrawableList;
+
 	hsTArray<plKey> SpawnPoints;
 	int curSpawnPoint;
 	void renderClusterMesh(hsTArray<plSpanTemplate::Vertex> verts, const unsigned short* indices, int NumTris,hsGMaterial* material);
 	void renderSpanMesh(hsTArray<plGBufferVertex> verts, hsTArray<unsigned short> indices,hsGMaterial* material,bool isWaveset, float WaterHeight);
 	void SetLayerParams(plLayerInterface* layer);
 	int RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam);
-	void l3dBillboardSphericalBegin(float *cam, float *worldPos);
+	void VFM_Spherical(float *cam, float *worldPos);
 	template <class T>
 	T *getModifierOfType(plSceneObject *sObj, T*(type)(plCreatable *pCre));
 	void SetSpawnPoint(int idxc, camera &cam);

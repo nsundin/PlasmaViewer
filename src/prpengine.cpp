@@ -22,7 +22,7 @@ float* getMatrixFrom_hsMatrix44(hsMatrix44 data) {
 }
 
 template <class T>
-T *prpengine::getModifierOfType(plSceneObject *sObj, T*(type)(plCreatable *pCre)) {
+T *prpengine::getModifierOfType(plSceneObject* sObj, T*(type)(plCreatable *pCre)) {
     for(size_t i = 0; i < sObj->getNumModifiers(); i++) {
         T *ret = type(sObj->getModifier(i)->getObj());
         if(ret != 0) return ret;
@@ -71,12 +71,11 @@ bool prpengine::SetSpawnPoint(plString name, camera &cam) {
     }
     return false;
 }
-void prpengine::AttemptToSetPlayerToLinkPointDefault(hsTArray<plKey> SObjects,camera &cam) {
+void prpengine::AttemptToSetPlayerToLinkPointDefault(std::vector<plKey> SObjects,camera &cam) {
     // let's get the linkinpointdefault (if we can)
     //printf("\n: LinkInPointDefault :\n");
     //printf("lookin'...\n");
-    size_t i;
-    for (i = 0; i < SObjects.getSize(); i++) {
+    for (size_t i = 0; i < SObjects.size(); i++) {
         if(getModifierOfType(plSceneObject::Convert(SObjects[i]->getObj()), plSpawnModifier::Convert))
             SpawnPoints.push(SObjects[i]);
     }
@@ -100,7 +99,7 @@ void prpengine::AddClusterGroupToDrawableList(plKey clustergroupkey) {
 	SortDrawableList();
 }
 
-void prpengine::AddAllClustersToDrawableList(std::vector<plKey> clusters) {
+void prpengine::AppendClustersToDrawList(std::vector<plKey> clusters) {
     for (size_t i = 0; i < clusters.size(); i++) {
 		if (clusters[i].Exists()) {
 			AddClusterGroupToDrawableList(clusters[i]);
@@ -154,8 +153,8 @@ void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
 }
 
 
-void prpengine::AppendAllObjectsToDrawList(hsTArray<plKey> SObjects) {
-    for (size_t i=0; i < SObjects.getSize(); i++) {
+void prpengine::AppendObjectsToDrawList(std::vector<plKey> SObjects) {
+    for (size_t i=0; i < SObjects.size(); i++) {
         AddSceneObjectToDrawableList(SObjects[i]);
     }
 }
@@ -332,55 +331,27 @@ void prpengine::SetLayerParams(plLayerInterface* layer) {
 	glColorMask(useColor, useColor, useColor, useAlpha);
 }
 
-void prpengine::l3dBillboardSphericalBegin(float *cam, float *worldPos) {
-
-//  glPushMatrix();
-//  glLoadIdentity();
+void prpengine::VFM_Spherical(float *cam, float *worldPos) {
     float lookAt[3]={0,-1,0},objToCamProj[3],objToCam[3],upAux[3],angleCosine;
-
-// objToCamProj is the vector in world coordinates from the local origin to the camera
-// projected in the XZ plane
     objToCamProj[0] = cam[0] - worldPos[0] ;
     objToCamProj[1] = cam[1] - worldPos[1] ;
     objToCamProj[2] = 0 ;
 
-// normalize both vectors to get the cosine directly afterwards
     mathsNormalize(objToCamProj);
-
-// easy fix to determine wether the angle is negative or positive
-// for positive angles upAux will be a vector pointing in the
-// positive y direction, otherwise upAux will point downwards
-// effectively reversing the rotation.
-
     mathsCrossProduct(upAux,lookAt,objToCamProj);
 
-// compute the angle
     angleCosine = mathsInnerProduct(lookAt,objToCamProj);
 
-// perform the rotation. The if statement is used for stability reasons
-// if the lookAt and v vectors are too close together then |aux| could
-// be bigger than 1 due to lack of precision
     if ((angleCosine < 0.99990) && (angleCosine > -0.9999))
         glRotatef(acos(angleCosine)*180/3.14,upAux[0], upAux[2], upAux[1]);
 
-
-// The second part tilts the object so that it faces the camera
-
-// objToCam is the vector in world coordinates from the local origin to the camera
     objToCam[0] = cam[0] - worldPos[0] ;
     objToCam[1] = cam[1] - worldPos[1] ;
     objToCam[2] = cam[2] - worldPos[2] ;
 
-// Normalize to get the cosine afterwards
     mathsNormalize(objToCam);
-
-// Compute the angle between v and v2, i.e. compute the
-// required angle for the lookup vector
     angleCosine = mathsInnerProduct(objToCamProj,objToCam);
 
-
-// Tilt the object. The test is done to prevent instability when objToCam and objToCamProj have a very small
-// angle between them
     if ((angleCosine < 0.99990) && (angleCosine > -0.9999)) {
         if (objToCam[2] < 0)
             glRotatef(acos(angleCosine)*180/3.14,-1,0,0);
@@ -390,13 +361,13 @@ void prpengine::l3dBillboardSphericalBegin(float *cam, float *worldPos) {
 
 }
 
-void prpengine::UpdateList(hsTArray<plKey> SObjects, bool wireframe, bool firstTime, camera &cam) {
+void prpengine::UpdateList(bool wireframe, bool firstTime, camera &cam) {
     printf("Renderlist Update\n");
     int count = 0;
     if(firstTime || gl_rendercount == 0) {
         if(!gl_rendercount)
             glDeleteLists(gl_renderlist, gl_rendercount);
-        gl_rendercount = SObjects.getSize();
+        gl_rendercount = DrawableList.size();
         gl_renderlist = glGenLists(gl_rendercount);
         for (size_t i=0; i < DrawableList.size(); i++) {
             DrawableList[i]->RenderIndex =  i;
@@ -477,7 +448,7 @@ void prpengine::draw(camera &cam) {
 							camV[i] = cam.getCamPos(i);
 							objV[i] = dObj->CIMat(i,3);
 						}
-						l3dBillboardSphericalBegin(camV, objV);
+						VFM_Spherical(camV, objV);
 					}
 				}
 			}
@@ -553,15 +524,14 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
         return 0;
 }
 
-void prpengine::LoadAllTextures(hsTArray<plKey> Textures) {
+void prpengine::LoadTextures(std::vector<plKey> Textures) {
     ///Warning, until a problem with the texture-class list is fixed do not run this more than once (for fear of mem-leak)
     if (gl_texlist != NULL)
         delete[] gl_texlist;
 
-
-    gl_texlist = new GLuint[Textures.getSize()];
-    glGenTextures(Textures.getSize(), gl_texlist);
-    for (size_t i=0; i < Textures.getSize(); i++) {
+    gl_texlist = new GLuint[Textures.size()];
+    glGenTextures(Textures.size(), gl_texlist);
+    for (size_t i=0; i < Textures.size(); i++) {
         TextureObject* tex = new TextureObject;
         tex->key = Textures[i];
         if (loadHeadSpinMipmapTexture(Textures[i],gl_texlist[i])) {
