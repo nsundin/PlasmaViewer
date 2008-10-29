@@ -136,7 +136,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="OpenGL32.lib Plasma.lib glu32.lib  sdl.lib sdlmain.lib"
+				AdditionalDependencies="OpenGL32.lib Plasma.lib glu32.lib sdl.lib sdlmain.lib sdl_ttf.lib"
 				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\Owner\Desktop\Plasma_lib\Plasma\bin&quot;"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
@@ -195,6 +195,14 @@
 			>
 		</File>
 		<File
+			RelativePath="..\src\player.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\src\player.h"
+			>
+		</File>
+		<File
 			RelativePath="..\src\prpengine.cpp"
 			>
 		</File>
@@ -212,6 +220,14 @@
 		</File>
 		<File
 			RelativePath="..\src\viewer_fni.h"
+			>
+		</File>
+		<File
+			RelativePath="..\src\window.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\src\window.h"
 			>
 		</File>
 	</Files>
