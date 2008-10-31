@@ -1,0 +1,20 @@
+PlasmaViewer (PlasmaPlayer?) todo list.
+Negative idecate things I should have done.
+
+-1) Hmm... -1 is not a valid indice... let's forget what I should be doing. ;P
+0) Attempt to figure out what the **** is up with the mipmaps.
+1) console
+2) console: link and pagein/pageout commands, warp, and some other things
+3) Make global pages page in first with the bar being grey rather than green.
+4) ODE physics (for regions etc)?
+5) Set avatar model be be player (maybe start with custom avatars since they use spans)
+
+Performance--is timeless and thus orderless) VisRegions, not every-object-per-frame sorting.
+
+n) Some transformational anims/anim framework.
+
+n) Plasma engine Python API simulation and empty Python functions to avoid erroring without having to turn my engine into a copy of Plasma (skim what you need most out of the paks).
+
+n) Sounds (OpenAL).
+
+Lontahv 10.28.2008

@@ -2,15 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef WIN32
-#include <windows.h>
-#else
-#include <GL/glx.h>
-#endif
 
-#include <GL/gl.h>
-#include <GL/glu.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_opengl.h>
 
 #include "ResManager/plResManager.h"
 #include "ResManager/plAgeInfo.h"
@@ -20,6 +14,8 @@
 #include "prpengine.h"
 #include "window.h"
 #include "player.h"
+
+#include "Font.h"
 
 std::vector<plKey> GlobalSceneObjectList;
 
@@ -32,18 +28,15 @@ camera cam;
 Player currentPlayer;
 prpengine prp_engine;
 
+//Font txt("FreeMono.ttf",18,0,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
 
-void GL_init(const char* filename, std::vector<plKey> SObjects) {
+void GL_init() {
     glDisable(GL_LIGHTING);
     glClearDepth(1.0f);
     glShadeModel(GL_SMOOTH);
-    glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClearAccum(0.0f, 0.0f, 0.0f, 0.0f);
-//	prp_engine.AttemptToSetFniSettings(plString(filename));
-    prp_engine.AttemptToSetPlayerToLinkPointDefault(SObjects,cam);
 }
 
 void KeyDownTrue(bool* var, unsigned press_type) {
@@ -133,15 +126,6 @@ void ProcessEvents() {
             break;
         }
     }
-}
-
-void draw() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
-//	std::cout << SDL_GetTicks() << std::endl;
-	prp_engine.draw(cam);
-    cam.update();
-//    glFlush();
-    SDL_GL_SwapBuffers();
 }
 
 
@@ -281,8 +265,70 @@ int Load(const char* filename) {
     return 1;
 }
 
+void goOrthoFlip(int window_w,int window_h) {
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(0,window_w, 0, window_h);
+	glScalef(1, -1, 1);
+	glTranslatef(0, -window_h, 0);
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void resetPerspective() {
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void drawText(char* text) {
+	glPushMatrix();
+
+	goOrthoFlip(SDLWindow.window_w,SDLWindow.window_h);
+	glLoadIdentity();
+//start shape
+//	txt.drawText(text,200,10);
+	
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 1);
+
+	glColor3f(1.0f,1.0f,1.0f);
+	glBegin(GL_POLYGON);
+
+	glTexCoord2i(0,1);
+    glVertex2f(0.0f,100.0f);
+	glTexCoord2i(1,1);
+    glVertex2f(100.0f,100.0f);
+	glTexCoord2i(1,0);
+    glVertex2f(100.0f,0.0f);
+	glTexCoord2i(0,0);
+    glVertex2f(0.0f,0.0f);
+    glEnd();
+//end
+	resetPerspective();
+	glPopMatrix();
+}
+
+void draw() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//	std::cout << SDL_GetTicks() << std::endl;
+    glEnable(GL_DEPTH_TEST);
+
+	prp_engine.draw(cam);
+	MotionHandler();
+    cam.update();
+
+	glDisable(GL_DEPTH_TEST);
+
+	drawText("Hello, quick brown fox!");
+
+	SDL_GL_SwapBuffers();
+}
+
+
 int main(int argc, char* argv[]) {
 	SDLWindow.init_SDL();
+    GL_init();
 
     plDebug::Init(plDebug::kDLAll);
 
@@ -295,13 +341,16 @@ int main(int argc, char* argv[]) {
 	else {
         Load(argv[1]);
 	}
+	printf(argv[0]);
     prp_engine.UpdateList(wireframe,true,cam);
 
-    GL_init(argv[1],GlobalSceneObjectList);
+	prp_engine.AttemptToSetFniSettings(plString(argv[1]));
+    
+	prp_engine.AttemptToSetPlayerToLinkPointDefault(GlobalSceneObjectList,cam);
+
 	SDLWindow.resize();
 	while(1) {
         ProcessEvents();
-        MotionHandler();
         draw();
     }
     return 0;

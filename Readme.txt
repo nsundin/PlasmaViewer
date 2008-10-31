@@ -1,6 +1,6 @@
 Plasma Viewer is a tool to view PRPs or whole ages.
 -------------------------------------------------
-To compile it you need SDL and PlasmaLib.
+To compile it you need SDL, SDL_ttf and PlasmaLib.
 
 It is currently mainly being developed on VisualC9 so you may need to do some editing to make it compile under Linux (although efforts are being made by me to keep it Linux-friendly).
 

@@ -1,12 +1,8 @@
 #ifndef __CAMERA_H__
 #define __CAMERA_H__
 
-#ifdef WIN32
-#include <windows.h>
-#endif
-
 #include <math.h>
-#include <GL/glu.h>
+#include <SDL/SDL_opengl.h>
 
 class camera {
 public:

@@ -1,22 +1,14 @@
 #ifndef __PRPENGINE_H__
 #define __PRPENGINE_H__
 
-
-#ifdef WIN32
-#include <windows.h>
-#else
-#include <GL/glx.h>
-#endif
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glext.h>
-
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
-
 #include <algorithm>
 #include <vector>
+
+#include <SDL/SDL_opengl.h>
+#include <GL/glext.h>
 
 #include "PRP/Surface/plMipmap.h"
 #include "Util/plString.h"

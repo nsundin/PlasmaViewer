@@ -159,14 +159,15 @@ void prpengine::AppendObjectsToDrawList(std::vector<plKey> SObjects) {
     }
 }
 void prpengine::AttemptToSetFniSettings(plString filename) {
-    glEnable(GL_FOG);
     fni fniFile;
     plString fnipath = (filename.beforeLast('.')+plString(".fni"));
     if (fniFile.load(fnipath)) {
+		glEnable(GL_FOG);
         printf("\n: FNI File :\n");
         glClearColor(fniFile.fClearColor[0], fniFile.fClearColor[1], fniFile.fClearColor[2], 1.0f);
         GLfloat fogcol[] = {fniFile.fDefColor[0], fniFile.fDefColor[1], fniFile.fDefColor[2], 1.0f};
 
+		printf("%f, %f, %f\n",fniFile.fDefLinear[0],fniFile.fDefLinear[1],fniFile.fDefLinear[2]);
         glFogfv(GL_FOG_COLOR, fogcol);
         if (fniFile.fFogType == fni::kLinear) {
             glFogi(GL_FOG_MODE, GL_LINEAR);
@@ -181,6 +182,7 @@ void prpengine::AttemptToSetFniSettings(plString filename) {
             glFogf(GL_FOG_DENSITY, fniFile.fDefExp2[1]);
         }
     }
+	else printf("\n No FNI File @ %s\n",fnipath.cstr());
 }
 
 int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam) {
@@ -276,11 +278,13 @@ void prpengine::SetLayerParams(plLayerInterface* layer) {
 			else {
 				printf("Bad texture: %s\n", layer->getTexture()->getName().cstr());
 				glDisable(GL_TEXTURE_2D);
+				return;
 			}
 		}
 		else {
 			printf("Texture not loaded: %s\n", layer->getTexture()->getName().cstr());
 			glDisable(GL_TEXTURE_2D);
+			return;
 		}
 	}
 	else {
@@ -307,7 +311,7 @@ void prpengine::SetLayerParams(plLayerInterface* layer) {
 	glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_SPECULAR, spec);
 	if (layer->getState().fShadeFlags & hsGMatState::kShadeEmissive)
 		glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_EMISSION, amb);
-	//glPixelTransferf(GL_ALPHA_SCALE, layer->getOpacity());
+//	glPixelTransferf(GL_ALPHA_SCALE, layer->getOpacity());
 
 	glDisable(GL_BLEND);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
@@ -419,6 +423,7 @@ void prpengine::PrintObjects() {
     }
 }
 void prpengine::draw(camera &cam) {
+	glPushMatrix();
     SortDrawableList();
     for (size_t i=0; i < DrawableList.size(); i++) {
         DrawableObject *dObj = DrawableList[i];
@@ -457,6 +462,7 @@ void prpengine::draw(camera &cam) {
 			glPopMatrix();
 		}
     }
+	glPopMatrix();
 }
 
 int prpengine::loadHeadSpinMipmapTexture(plKey mipmapkey,int texname) {

@@ -191,6 +191,14 @@
 			>
 		</File>
 		<File
+			RelativePath="..\src\Font.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\src\Font.h"
+			>
+		</File>
+		<File
 			RelativePath="..\src\PlasmaViewer.cpp"
 			>
 		</File>

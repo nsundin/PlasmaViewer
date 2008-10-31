@@ -28,9 +28,12 @@ void camera::update() {
     gluLookAt(cam[0], cam[1], cam[2], cam[0] + camL[0], cam[1] + camL[1], cam[2] + camL[2], 0.0f,0.0f,1.0f);
 
 }
+
 float camera::getCamPos(int i) {
 	return cam[i];
 }
 float camera::getCamPosL(int i) {
 	return camL[i];
 }
+
+
