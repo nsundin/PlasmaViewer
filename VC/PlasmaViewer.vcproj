@@ -191,11 +191,11 @@
 			>
 		</File>
 		<File
-			RelativePath="..\src\Font.cpp"
+			RelativePath="..\src\DynText.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\src\Font.h"
+			RelativePath="..\src\DynText.h"
 			>
 		</File>
 		<File
@@ -208,6 +208,14 @@
 		</File>
 		<File
 			RelativePath="..\src\player.h"
+			>
+		</File>
+		<File
+			RelativePath="..\src\PlayerConsole.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\src\PlayerConsole.h"
 			>
 		</File>
 		<File

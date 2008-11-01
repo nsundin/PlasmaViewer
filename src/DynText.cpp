@@ -1,4 +1,4 @@
-#include "Font.h"
+#include "DynText.h"
 
 
 /** 
@@ -98,7 +98,7 @@ GLuint loadTextureColorKey(SDL_Surface *surface,GLfloat *texcoord, int ckr,int c
   return texture;
 }
 
-void Font::loadChar(char c)
+void DynText::loadChar(char c)
   {
     GLfloat texcoord[4];
     char letter[2] = {0, 0};
@@ -140,7 +140,7 @@ void Font::loadChar(char c)
     }
   }
 
-Font::Font(const char * address, int pointSize, int style, float fgRed, float fgGreen, float fgBlue, float bgRed, float bgGreen, float bgBlue):
+DynText::DynText(const char * address, int pointSize, int style, float fgRed, float fgGreen, float fgBlue, float bgRed, float bgGreen, float bgBlue):
     address(address), length(length),
     pointSize(pointSize),
     style(style),
@@ -155,11 +155,11 @@ Font::Font(const char * address, int pointSize, int style, float fgRed, float fg
   }
 
 
-Font::~Font() {
+DynText::~DynText() {
 	TTF_Quit();
 }
 
-void Font::initFont() {
+void DynText::initFont() {
     int i;
 
     ttfFont = TTF_OpenFont(address, pointSize);
@@ -190,15 +190,15 @@ void Font::initFont() {
     }
   }
 
-int Font::getLineSkip() {
+int DynText::getLineSkip() {
 	return lineSkip;
 }
 
-int Font::getHeight() {
+int DynText::getHeight() {
 	return height;
 }
 
-void Font::textSize(char *text, SDL_Rect *r) {
+void DynText::textSize(char *text, SDL_Rect *r) {
     int maxx = 0;
     int advance = 0;
 
@@ -224,7 +224,7 @@ void Font::textSize(char *text, SDL_Rect *r) {
     r->w = r->w - advance + maxx;
 }
 
-void Font::drawText(char *text, int x, int y) {
+void DynText::drawText(char *text, int x, int y) {
     GLfloat left, right;
     GLfloat top, bottom;
     GLfloat texMinX, texMinY;

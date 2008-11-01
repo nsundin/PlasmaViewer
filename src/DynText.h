@@ -13,7 +13,7 @@
 GLuint loadTextureColorKey(SDL_Surface *surface,GLfloat *texcoord, int ckr,int ckg, int ckb);
 static int powerOfTwo(int input);
 
-class Font
+class DynText
 {
 private:
   static const int minGlyph = ' ';
@@ -47,8 +47,8 @@ private:
   void loadChar(char c);
 
 public:
-	Font(const char * address, int pointSize, int style, float fgRed, float fgGreen, float fgBlue, float bgRed, float bgGreen, float bgBlue);
-	~Font();
+	DynText(const char * address, int pointSize, int style, float fgRed, float fgGreen, float fgBlue, float bgRed, float bgGreen, float bgBlue);
+	~DynText();
 	void initFont();
 	int getLineSkip();
 	int getHeight();

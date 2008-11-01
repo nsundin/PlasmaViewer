@@ -14,10 +14,11 @@
 #include "prpengine.h"
 #include "window.h"
 #include "player.h"
-
-#include "Font.h"
+#include "console.h"
 
 std::vector<plKey> GlobalSceneObjectList;
+
+//("FreeMono.ttf",18,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
 
 int vpaint = 1;
 bool wireframe = false;
@@ -27,8 +28,6 @@ plResManager rm;
 camera cam;
 Player currentPlayer;
 prpengine prp_engine;
-
-//Font txt("FreeMono.ttf",18,0,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
 
 void GL_init() {
     glDisable(GL_LIGHTING);
@@ -265,7 +264,7 @@ int Load(const char* filename) {
     return 1;
 }
 
-void goOrthoFlip(int window_w,int window_h) {
+void startGUI(int window_w,int window_h) {
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
@@ -275,37 +274,20 @@ void goOrthoFlip(int window_w,int window_h) {
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void resetPerspective() {
+
+void endGUI() {
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void drawText(char* text) {
+void drawToScreen(char* text,int posX,int PosY) {
 	glPushMatrix();
-
-	goOrthoFlip(SDLWindow.window_w,SDLWindow.window_h);
+	startGUI(SDLWindow.window_w,SDLWindow.window_h);
 	glLoadIdentity();
-//start shape
-//	txt.drawText(text,200,10);
-	
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 1);
+	//render stuff
+	endGUI();
 
-	glColor3f(1.0f,1.0f,1.0f);
-	glBegin(GL_POLYGON);
-
-	glTexCoord2i(0,1);
-    glVertex2f(0.0f,100.0f);
-	glTexCoord2i(1,1);
-    glVertex2f(100.0f,100.0f);
-	glTexCoord2i(1,0);
-    glVertex2f(100.0f,0.0f);
-	glTexCoord2i(0,0);
-    glVertex2f(0.0f,0.0f);
-    glEnd();
-//end
-	resetPerspective();
 	glPopMatrix();
 }
 
@@ -318,10 +300,8 @@ void draw() {
 	MotionHandler();
     cam.update();
 
-	glDisable(GL_DEPTH_TEST);
-
-	drawText("Hello, quick brown fox!");
-
+//	addToBuffer("Hello, quick brown fox!");
+//	printToLine("");
 	SDL_GL_SwapBuffers();
 }
 
@@ -355,3 +335,20 @@ int main(int argc, char* argv[]) {
     }
     return 0;
 }
+
+	//glEnable(GL_TEXTURE_2D);
+	//glBindTexture(GL_TEXTURE_2D, 1);
+
+	//glColor3f(1.0f,1.0f,1.0f);
+	//glBegin(GL_POLYGON);
+
+	//glTexCoord2i(0,1);
+ //   glVertex2f(0.0f,100.0f);
+
+	//glTexCoord2i(1,1);
+ //   glVertex2f(100.0f,100.0f);
+	//glTexCoord2i(1,0);
+ //   glVertex2f(100.0f,0.0f);
+	//glTexCoord2i(0,0);
+ //   glVertex2f(0.0f,0.0f);
+ //   glEnd();
