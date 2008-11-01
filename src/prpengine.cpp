@@ -162,7 +162,6 @@ void prpengine::AttemptToSetFniSettings(plString filename) {
     fni fniFile;
     plString fnipath = (filename.beforeLast('.')+plString(".fni"));
     if (fniFile.load(fnipath)) {
-        glEnable(GL_FOG);
         printf("\n: FNI File :\n");
         glClearColor(fniFile.fClearColor[0], fniFile.fClearColor[1], fniFile.fClearColor[2], 1.0f);
         GLfloat fogcol[] = {fniFile.fDefColor[0], fniFile.fDefColor[1], fniFile.fDefColor[2], 1.0f};
@@ -170,12 +169,14 @@ void prpengine::AttemptToSetFniSettings(plString filename) {
         printf("%f, %f, %f\n",fniFile.fDefLinear[0],fniFile.fDefLinear[1],fniFile.fDefLinear[2]);
         glFogfv(GL_FOG_COLOR, fogcol);
         if (fniFile.fFogType == fni::kLinear) {
+            glEnable(GL_FOG);
             glFogi(GL_FOG_MODE, GL_LINEAR);
             glFogf(GL_FOG_START, fniFile.fDefLinear[0]);
             glFogf(GL_FOG_END, fniFile.fDefLinear[1]);
             glFogf(GL_FOG_DENSITY, fniFile.fDefLinear[2]);
         }
         if (fniFile.fFogType == fni::kExp2) {
+            glEnable(GL_FOG);
             glFogi(GL_FOG_MODE, GL_EXP2);
             glFogf(GL_FOG_START, 0.0f);
             glFogf(GL_FOG_END, fniFile.fDefExp2[0]);
@@ -365,13 +366,13 @@ void prpengine::VFM_Spherical(float *cam, float *worldPos) {
 void prpengine::UpdateList(bool wireframe) {
     printf("Renderlist Update\n");
     int count = 0;
-	if(gl_rendercount)
-		glDeleteLists(gl_renderlist, gl_rendercount);
+    if(gl_rendercount)
+        glDeleteLists(gl_renderlist, gl_rendercount);
 
-	gl_rendercount = DrawableList.size();
-	gl_renderlist = glGenLists(gl_rendercount);
-	for (size_t i=0; i < DrawableList.size(); i++) {
-		DrawableList[i]->RenderIndex =  i;
+    gl_rendercount = DrawableList.size();
+    gl_renderlist = glGenLists(gl_rendercount);
+    for (size_t i=0; i < DrawableList.size(); i++) {
+        DrawableList[i]->RenderIndex =  i;
         glNewList(gl_renderlist+i, GL_COMPILE);
         RenderDrawable(DrawableList[i],wireframe?0:1,cam);
         glEndList();
@@ -547,23 +548,23 @@ int prpengine::getTextureIDFromKey(plKey in_key) {
 
 void prpengine::UnloadObjects(int sequenceprefix) {
     for (size_t i = 0; i < TextureList.size(); i++) {
-		if (TextureList[i]->key->getLocation().getSeqPrefix() == sequenceprefix) {
-			TextureList.erase(TextureList.begin()+i);
-			i-=1;
-		}
-	}
+        if (TextureList[i]->key->getLocation().getSeqPrefix() == sequenceprefix) {
+            TextureList.erase(TextureList.begin()+i);
+            i-=1;
+        }
+    }
     for (size_t i = 0; i < DrawableList.size(); i++) {
-		if (DrawableList[i]->Owner->getLocation().getSeqPrefix() == sequenceprefix) {
-			DrawableList.erase(DrawableList.begin()+i);
-			i-=1;
-		}
-	}
+        if (DrawableList[i]->Owner->getLocation().getSeqPrefix() == sequenceprefix) {
+            DrawableList.erase(DrawableList.begin()+i);
+            i-=1;
+        }
+    }
     for (size_t i = 0; i < AllLoadedSceneObjects.size(); i++) {
-		if (AllLoadedSceneObjects[i]->getLocation().getSeqPrefix() == sequenceprefix) {
-			AllLoadedSceneObjects.erase(AllLoadedSceneObjects.begin()+i);
-			i-=1;
-		}
-	}
+        if (AllLoadedSceneObjects[i]->getLocation().getSeqPrefix() == sequenceprefix) {
+            AllLoadedSceneObjects.erase(AllLoadedSceneObjects.begin()+i);
+            i-=1;
+        }
+    }
 }
 
     //if (rendermode == 0) {
