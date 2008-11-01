@@ -11,7 +11,6 @@ Original Code written by:
   +--------------------------------------+
 	http://www.devolution.com/pipermail/sdl/2004-December/066119.html
 	http://www.oreillynet.com/pub/au/1205
-Released under the LGPL
 **/
 
 
@@ -163,9 +162,8 @@ void DynText::initFont() {
     int i;
 
     ttfFont = TTF_OpenFont(address, pointSize);
-    if (NULL == ttfFont)
-    {
-      printf("Can't open font file");
+    if (NULL == ttfFont) {
+		printf("Can't open font file at: %s",address);
     }
 
     TTF_SetFontStyle(ttfFont, style);

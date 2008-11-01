@@ -14,13 +14,17 @@
 
 class PlayerConsole {
 public:
-	void draw();
+	bool isHighlighted;
+	bool isTextInTypeBuffer();
+	void draw(int window_w,int window_h);
 	void addLineToMainBuffer(std::string line);
 	std::string enter();
+	void backSpace();
 	void addCharToTypeBuffer(char c);
-	std::string TypeBuffer;
 	DynText * texthandler;
 private:
+	std::string TypeBuffer;
+	std::string ReturnBuffer;
 	std::vector<std::string> scrolltxt;
 };
 

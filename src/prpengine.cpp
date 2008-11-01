@@ -63,7 +63,7 @@ void prpengine::SetSpawnPoint(int idx, camera &cam) {
 }
 bool prpengine::SetSpawnPoint(plString name, camera &cam) {
     for (size_t i = 0; i < SpawnPoints.getSize(); i++) {
-		if ((const plString)"LinkInPointDefault" == SpawnPoints[i]->getName())
+        if ((const plString)"LinkInPointDefault" == SpawnPoints[i]->getName())
         {
             SetSpawnPoint(i, cam);
             return true;
@@ -71,41 +71,41 @@ bool prpengine::SetSpawnPoint(plString name, camera &cam) {
     }
     return false;
 }
-void prpengine::AttemptToSetPlayerToLinkPointDefault(std::vector<plKey> SObjects,camera &cam) {
+void prpengine::AttemptToSetPlayerToLinkPointDefault(camera &cam) {
     // let's get the linkinpointdefault (if we can)
     //printf("\n: LinkInPointDefault :\n");
     //printf("lookin'...\n");
-    for (size_t i = 0; i < SObjects.size(); i++) {
-        if(getModifierOfType(plSceneObject::Convert(SObjects[i]->getObj()), plSpawnModifier::Convert))
-            SpawnPoints.push(SObjects[i]);
+    for (size_t i = 0; i < AllLoadedSceneObjects.size(); i++) {
+        if(getModifierOfType(plSceneObject::Convert(AllLoadedSceneObjects[i]->getObj()), plSpawnModifier::Convert))
+            SpawnPoints.push(AllLoadedSceneObjects[i]);
     }
 //    curSpawnPoint = 0;
-	if(!SetSpawnPoint(plString("LinkInPointDefault"), cam)) {
+    if(!SetSpawnPoint(plString("LinkInPointDefault"), cam)) {
         printf("Couldn't find a link-in point\n");
-		printf("...Attempting to spawn to next spawn-point on list instead.\n");
-		NextSpawnPoint(cam);
-	}
+        printf("...Attempting to spawn to next spawn-point on list instead.\n");
+        NextSpawnPoint(cam);
+    }
 }
 
 void prpengine::AddClusterGroupToDrawableList(plKey clustergroupkey) {
-	DrawableObject* dObj = new DrawableObject;
+    DrawableObject* dObj = new DrawableObject;
 
-	plClusterGroup* cluster = plClusterGroup::Convert(clustergroupkey->getObj());
-	dObj->isCluster = true;
-	dObj->ClusterGroup = cluster;
-	dObj->renderlevel = cluster->getRenderLevel();
-	dObj->Owner = clustergroupkey;
-	DrawableList.push_back(dObj);
-	SortDrawableList();
+    plClusterGroup* cluster = plClusterGroup::Convert(clustergroupkey->getObj());
+    dObj->isCluster = true;
+    dObj->ClusterGroup = cluster;
+    dObj->renderlevel = cluster->getRenderLevel();
+    dObj->Owner = clustergroupkey;
+    DrawableList.push_back(dObj);
+    SortDrawableList();
 }
 
 void prpengine::AppendClustersToDrawList(std::vector<plKey> clusters) {
     for (size_t i = 0; i < clusters.size(); i++) {
-		if (clusters[i].Exists()) {
-			AddClusterGroupToDrawableList(clusters[i]);
-			printf("ADDED CLUSTER: %s\n",clusters[i]->getName().cstr());
-		}
-	}
+        if (clusters[i].Exists()) {
+            AddClusterGroupToDrawableList(clusters[i]);
+            printf("ADDED CLUSTER: %s\n",clusters[i]->getName().cstr());
+        }
+    }
 }
 void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
     plSceneObject* obj = plSceneObject::Convert(sobjectkey->getObj());
@@ -136,7 +136,7 @@ void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
             dObj->renderlevel = span->getRenderLevel();
             dObj->spanflags = span->getProps();
             dObj->draw = draw;
-			dObj->isCluster = false;
+            dObj->isCluster = false;
             dObj->vfm = 0;
             for(size_t i = 0; i < obj->getNumModifiers(); i++) {
                 plViewFaceModifier * vfm = plViewFaceModifier::Convert(obj->getModifier(i)->getObj());
@@ -145,7 +145,7 @@ void prpengine::AddSceneObjectToDrawableList(plKey sobjectkey) {
                     break;
                 }
             }
-			dObj->isAnimPlaying = true;
+            dObj->isAnimPlaying = true;
             DrawableList.push_back(dObj);
         }
         SortDrawableList();
@@ -162,12 +162,12 @@ void prpengine::AttemptToSetFniSettings(plString filename) {
     fni fniFile;
     plString fnipath = (filename.beforeLast('.')+plString(".fni"));
     if (fniFile.load(fnipath)) {
-		glEnable(GL_FOG);
+        glEnable(GL_FOG);
         printf("\n: FNI File :\n");
         glClearColor(fniFile.fClearColor[0], fniFile.fClearColor[1], fniFile.fClearColor[2], 1.0f);
         GLfloat fogcol[] = {fniFile.fDefColor[0], fniFile.fDefColor[1], fniFile.fDefColor[2], 1.0f};
 
-		printf("%f, %f, %f\n",fniFile.fDefLinear[0],fniFile.fDefLinear[1],fniFile.fDefLinear[2]);
+        printf("%f, %f, %f\n",fniFile.fDefLinear[0],fniFile.fDefLinear[1],fniFile.fDefLinear[2]);
         glFogfv(GL_FOG_COLOR, fogcol);
         if (fniFile.fFogType == fni::kLinear) {
             glFogi(GL_FOG_MODE, GL_LINEAR);
@@ -182,157 +182,154 @@ void prpengine::AttemptToSetFniSettings(plString filename) {
             glFogf(GL_FOG_DENSITY, fniFile.fDefExp2[1]);
         }
     }
-	else printf("\n No FNI File @ %s\n",fnipath.cstr());
+    else printf("\n No FNI File @ %s\n",fnipath.cstr());
 }
 
 int prpengine::RenderDrawable(DrawableObject* dObj, int rendermode, camera &cam) {
-	if (!dObj->isCluster) {
-		plDrawableSpans* span = plDrawableSpans::Convert(dObj->SpanKey->getObj());
-		plDISpanIndex di = span->getDIIndex(dObj->DrawableKey);
-		if ((di.fFlags & plDISpanIndex::kMatrixOnly) != 0) {
-			return 0;
-		}
-		if(dObj->draw->getProperties().get(0)) return 0;
-		for (size_t idx=0; idx<di.fIndices.getSize(); idx++) {
-			plIcicle* ice = (plIcicle*)span->getSpan(di.fIndices[idx]);
-			//searching for a honest matrix... oh no it's not anymore.  what a pity =P
-			plKey materialkey = span->getMaterial(ice->getMaterialIdx());
-			if (!materialkey.isLoaded())
-				return 0;
-			hsGMaterial* material = hsGMaterial::Convert(materialkey->getObj());
-			renderSpanMesh(span->getVerts(ice),span->getIndices(ice),material,(ice->getProps() & plSpan::kWaterHeight),ice->getWaterHeight());
-		}
-	}
-	else {
-		plKey materialkey = dObj->ClusterGroup->getMaterial();
-		if (!materialkey.isLoaded())
-			return 0;
-		hsGMaterial* material = hsGMaterial::Convert(materialkey->getObj());
+    if (!dObj->isCluster) {
+        plDrawableSpans* span = plDrawableSpans::Convert(dObj->SpanKey->getObj());
+        plDISpanIndex di = span->getDIIndex(dObj->DrawableKey);
+        if ((di.fFlags & plDISpanIndex::kMatrixOnly) != 0) {
+            return 0;
+        }
+        if(dObj->draw->getProperties().get(0)) return 0;
+        for (size_t idx=0; idx<di.fIndices.getSize(); idx++) {
+            plIcicle* ice = (plIcicle*)span->getSpan(di.fIndices[idx]);
+            //searching for a honest matrix... oh no it's not anymore.  what a pity =P
+            plKey materialkey = span->getMaterial(ice->getMaterialIdx());
+            if (!materialkey.isLoaded())
+                return 0;
+            hsGMaterial* material = hsGMaterial::Convert(materialkey->getObj());
+            renderSpanMesh(span->getVerts(ice),span->getIndices(ice),material,(ice->getProps() & plSpan::kWaterHeight),ice->getWaterHeight());
+        }
+    }
+    else {
+        plKey materialkey = dObj->ClusterGroup->getMaterial();
+        if (!materialkey.isLoaded())
+            return 0;
+        hsGMaterial* material = hsGMaterial::Convert(materialkey->getObj());
 
-		plSpanTemplate span = dObj->ClusterGroup->getTemplate();
-		renderClusterMesh(span.getVertices(),span.getIndices(),span.getNumTris(),material);
-	}
+        plSpanTemplate span = dObj->ClusterGroup->getTemplate();
+        renderClusterMesh(span.getVertices(),span.getIndices(),span.getNumTris(),material);
+    }
     return 1;
 }
 
 
 
 void prpengine::renderClusterMesh(hsTArray<plSpanTemplate::Vertex> verts, const unsigned short* indices, int NumTris, hsGMaterial* material) {
-	for (size_t layeridx = 0; layeridx < material->getNumLayers(); layeridx++) {
-		plKey layerkey = material->getLayer(layeridx);
-		plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
-		size_t uvSrc = layer->getUVWSrc() & 0xFFFF;
-		SetLayerParams(layer);
-		//now our mesh
-		glBegin(GL_TRIANGLES);
-		for (size_t j=0; j < (size_t)(NumTris * 3); j++) {
-			int indice = indices[j];
-			hsVector3 pos;
-			pos = verts[indice].fPosition;		
-			hsVector3 uvw = verts[indice].fUVWs[uvSrc] * layer->getTransform();
-			glTexCoord2f(uvw.X,uvw.Y);
-			hsColor32 col = verts[indice].fColor1;
-			glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
-			glNormal3f(verts[indice].fNormal.X,verts[indice].fNormal.Y,verts[indice].fNormal.Z);
-			glVertex3f(pos.X,pos.Y ,pos.Z);
-		}
-		glEnd();
-	}
+    for (size_t layeridx = 0; layeridx < material->getNumLayers(); layeridx++) {
+        plKey layerkey = material->getLayer(layeridx);
+        plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
+        size_t uvSrc = layer->getUVWSrc() & 0xFFFF;
+        SetLayerParams(layer);
+        //now our mesh
+        glBegin(GL_TRIANGLES);
+        for (size_t j=0; j < (size_t)(NumTris * 3); j++) {
+            int indice = indices[j];
+            hsVector3 pos;
+            pos = verts[indice].fPosition;		
+            hsVector3 uvw = verts[indice].fUVWs[uvSrc] * layer->getTransform();
+            glTexCoord2f(uvw.X,uvw.Y);
+            hsColor32 col = verts[indice].fColor1;
+            glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
+            glNormal3f(verts[indice].fNormal.X,verts[indice].fNormal.Y,verts[indice].fNormal.Z);
+            glVertex3f(pos.X,pos.Y ,pos.Z);
+        }
+        glEnd();
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    }
 }
 
 void prpengine::renderSpanMesh(hsTArray<plGBufferVertex> verts, hsTArray<unsigned short> indices,hsGMaterial* material,bool isWaveset, float WaterHeight) {
-	for (size_t layeridx = 0; layeridx < material->getNumLayers(); layeridx++) {
-		plKey layerkey = material->getLayer(layeridx);
-		plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
-		size_t uvSrc = layer->getUVWSrc() & 0xFFFF;
-		SetLayerParams(layer);
-		glBegin(GL_TRIANGLES);
-		for (size_t j = 0; j < indices.getSize(); j++) {
-			int indice = indices[j];
-			hsVector3 pos;
-			pos = verts[indice].fPos;		
-			hsVector3 uvw = verts[indice].fUVWs[uvSrc] * layer->getTransform();
-			glTexCoord2f(uvw.X,uvw.Y);
+    for (size_t layeridx = 0; layeridx < material->getNumLayers(); layeridx++) {
+        plKey layerkey = material->getLayer(layeridx);
+        plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
+        size_t uvSrc = layer->getUVWSrc() & 0xFFFF;
+        SetLayerParams(layer);
+        glBegin(GL_TRIANGLES);
+        for (size_t j = 0; j < indices.getSize(); j++) {
+            int indice = indices[j];
+            hsVector3 pos;
+            pos = verts[indice].fPos;		
+            hsVector3 uvw = verts[indice].fUVWs[uvSrc] * layer->getTransform();
+            glTexCoord2f(uvw.X,uvw.Y);
 
-			hsColor32 col = verts[indice].fColor;
-			glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
-			
-			glNormal3f(verts[indice].fNormal.X,verts[indice].fNormal.Y,verts[indice].fNormal.Z);
-			if (isWaveset)
-				glVertex3f(pos.X,pos.Y, WaterHeight);
-			else
-				glVertex3f(pos.X,pos.Y ,pos.Z);
-		}
-		glEnd();
-	}
+            hsColor32 col = verts[indice].fColor;
+            glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
+            
+            glNormal3f(verts[indice].fNormal.X,verts[indice].fNormal.Y,verts[indice].fNormal.Z);
+            if (isWaveset)
+                glVertex3f(pos.X,pos.Y, WaterHeight);
+            else
+                glVertex3f(pos.X,pos.Y ,pos.Z);
+        }
+        glEnd();
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    }
 }
 
 void prpengine::SetLayerParams(plLayerInterface* layer) {
-	if (layer->getTexture()) {
-		if (layer->getTexture().isLoaded()) {
-			int texID = getTextureIDFromKey(layer->getTexture());
-			if (texID != -1) {
-				glEnable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D, texID);
-			}
-			else {
-				printf("Bad texture: %s\n", layer->getTexture()->getName().cstr());
-				glDisable(GL_TEXTURE_2D);
-				return;
-			}
-		}
-		else {
-			printf("Texture not loaded: %s\n", layer->getTexture()->getName().cstr());
-			glDisable(GL_TEXTURE_2D);
-			return;
-		}
-	}
-	else {
-		glDisable(GL_TEXTURE_2D);
-	}
-	bool is2Sided = (layer->getState().fMiscFlags & hsGMatState::kMiscTwoSided) != 0;
-	if (is2Sided) {
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glDisable(GL_CULL_FACE);
-	}
-	else {
-		glPolygonMode(GL_FRONT, GL_FILL);
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
-	}
-	float amb[4] = { layer->getAmbient().r, layer->getAmbient().g,
-					 layer->getAmbient().b, layer->getAmbient().a };
-	float dif[4] = { layer->getRuntime().r, layer->getRuntime().g,
-					 layer->getRuntime().b, layer->getRuntime().a };
-	float spec[4] = { layer->getSpecular().r, layer->getSpecular().g,
-					  layer->getSpecular().b, layer->getSpecular().a };
-	glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_AMBIENT, amb);
-	glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
-	glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_SPECULAR, spec);
-	if (layer->getState().fShadeFlags & hsGMatState::kShadeEmissive)
-		glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_EMISSION, amb);
+    if (layer->getTexture()) {
+        if (layer->getTexture().isLoaded()) {
+            int texID = getTextureIDFromKey(layer->getTexture());
+            if (texID != -1) {
+                glEnable(GL_TEXTURE_2D);
+                glBindTexture(GL_TEXTURE_2D, texID);
+            }
+            else {
+                printf("Bad texture: %s\n", layer->getTexture()->getName().cstr());
+                glDisable(GL_TEXTURE_2D);
+            }
+        }
+        else {
+            printf("Texture not loaded: %s\n", layer->getTexture()->getName().cstr());
+            glDisable(GL_TEXTURE_2D);
+        }
+    }
+    else {
+        glDisable(GL_TEXTURE_2D);
+    }
+    bool is2Sided = (layer->getState().fMiscFlags & hsGMatState::kMiscTwoSided) != 0;
+    if (is2Sided) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glDisable(GL_CULL_FACE);
+    }
+    else {
+        glPolygonMode(GL_FRONT, GL_FILL);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+    }
+    float amb[4] = { layer->getAmbient().r, layer->getAmbient().g,
+                     layer->getAmbient().b, layer->getAmbient().a };
+    float dif[4] = { layer->getRuntime().r, layer->getRuntime().g,
+                     layer->getRuntime().b, layer->getRuntime().a };
+    float spec[4] = { layer->getSpecular().r, layer->getSpecular().g,
+                      layer->getSpecular().b, layer->getSpecular().a };
+    glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_AMBIENT, amb);
+    glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
+    glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+    if (layer->getState().fShadeFlags & hsGMatState::kShadeEmissive)
+        glMaterialfv(is2Sided ? GL_FRONT : GL_FRONT_AND_BACK, GL_EMISSION, amb);
 //	glPixelTransferf(GL_ALPHA_SCALE, layer->getOpacity());
 
-	glDisable(GL_BLEND);
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
-	if ((layer->getState().fBlendFlags & hsGMatState::kBlendAlpha) != 0) {
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	}
-	if ((layer->getState().fBlendFlags & hsGMatState::kBlendAdd) != 0) {
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE);
-		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	}
-	int useColor = GL_TRUE, useAlpha = GL_TRUE;
-	if ((layer->getState().fBlendFlags & hsGMatState::kBlendNoTexColor) != 0) {
-		useColor = GL_FALSE;
-	}
-	if ((layer->getState().fBlendFlags & hsGMatState::kBlendNoTexAlpha) != 0) {
-		useAlpha = GL_FALSE;
-	}
-	glColorMask(useColor, useColor, useColor, useAlpha);
+    glDisable(GL_BLEND);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+    if ((layer->getState().fBlendFlags & hsGMatState::kBlendAlpha) != 0) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    }
+    if ((layer->getState().fBlendFlags & hsGMatState::kBlendAdd) != 0) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    }
+    if ((layer->getState().fBlendFlags & hsGMatState::kBlendNoTexColor) != 0) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
+    }
 }
 
 void prpengine::VFM_Spherical(float *cam, float *worldPos) {
@@ -365,32 +362,20 @@ void prpengine::VFM_Spherical(float *cam, float *worldPos) {
 
 }
 
-void prpengine::UpdateList(bool wireframe, bool firstTime, camera &cam) {
+void prpengine::UpdateList(bool wireframe) {
     printf("Renderlist Update\n");
     int count = 0;
-    if(firstTime || gl_rendercount == 0) {
-        if(!gl_rendercount)
-            glDeleteLists(gl_renderlist, gl_rendercount);
-        gl_rendercount = DrawableList.size();
-        gl_renderlist = glGenLists(gl_rendercount);
-        for (size_t i=0; i < DrawableList.size(); i++) {
-            DrawableList[i]->RenderIndex =  i;
-            glNewList(gl_renderlist+i, GL_COMPILE);
-            RenderDrawable(DrawableList[i],wireframe?0:1,cam);
-            glEndList();
-            count++;
-        }
-    }
-    else {
-        for (size_t i=0; i < DrawableList.size(); i++) {
-            if(DrawableList[i]->vfm && DrawableList[i]->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
-                glDeleteLists(gl_renderlist+DrawableList[i]->RenderIndex, 1);
-                glNewList(gl_renderlist+DrawableList[i]->RenderIndex, GL_COMPILE);
-                RenderDrawable(DrawableList[i],wireframe?0:1,cam);
-                glEndList();
-                count++;
-            }
-        }
+	if(gl_rendercount)
+		glDeleteLists(gl_renderlist, gl_rendercount);
+
+	gl_rendercount = DrawableList.size();
+	gl_renderlist = glGenLists(gl_rendercount);
+	for (size_t i=0; i < DrawableList.size(); i++) {
+		DrawableList[i]->RenderIndex =  i;
+        glNewList(gl_renderlist+i, GL_COMPILE);
+        RenderDrawable(DrawableList[i],wireframe?0:1,cam);
+        glEndList();
+        count++;
     }
     printf("Regenerated %d items\n", count);
 }
@@ -423,46 +408,46 @@ void prpengine::PrintObjects() {
     }
 }
 void prpengine::draw(camera &cam) {
-	glPushMatrix();
+    glPushMatrix();
     SortDrawableList();
     for (size_t i=0; i < DrawableList.size(); i++) {
         DrawableObject *dObj = DrawableList[i];
         if (dObj->isCluster) {
-			for (size_t clusteridx = 0; clusteridx < dObj->ClusterGroup->getNumClusters(); clusteridx++) {
-				plCluster* c = dObj->ClusterGroup->getCluster(clusteridx);
-				for(size_t inst = 0; inst < c->getNumInstances(); inst++) {
-					glPushMatrix();
-					glMultMatrixf(getMatrixFrom_hsMatrix44(c->getInstance(inst)->getLocalToWorld()));
-					glCallList(gl_renderlist+dObj->RenderIndex);
-					glPopMatrix();
-				}
-			}
-		}
-		else {
-			glPushMatrix();
-			if (dObj->hasCI) {
-				glMultMatrixf(getMatrixFrom_hsMatrix44(DrawableList[i]->CIMat));
-			}
+            for (size_t clusteridx = 0; clusteridx < dObj->ClusterGroup->getNumClusters(); clusteridx++) {
+                plCluster* c = dObj->ClusterGroup->getCluster(clusteridx);
+                for(size_t inst = 0; inst < c->getNumInstances(); inst++) {
+                    glPushMatrix();
+                    glMultMatrixf(getMatrixFrom_hsMatrix44(c->getInstance(inst)->getLocalToWorld()));
+                    glCallList(gl_renderlist+dObj->RenderIndex);
+                    glPopMatrix();
+                }
+            }
+        }
+        else {
+            glPushMatrix();
+            if (dObj->hasCI) {
+                glMultMatrixf(getMatrixFrom_hsMatrix44(DrawableList[i]->CIMat));
+            }
 //			if (dObj->isAnimPlaying) {
 //			}
-			if(dObj->vfm) {
-				if(dObj->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
-					if(dObj->hasCI) {
-						float camV[3], objV[3];
-						for(int i = 0; i < 3; i++) {
-							camV[i] = cam.getCamPos(i);
-							objV[i] = dObj->CIMat(i,3);
-						}
-						VFM_Spherical(camV, objV);
-					}
-				}
-			}
-			glCallList(gl_renderlist+dObj->RenderIndex);
-			//RenderDrawable(dObj,1,cam);
-			glPopMatrix();
-		}
+            if(dObj->vfm) {
+                if(dObj->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
+                    if(dObj->hasCI) {
+                        float camV[3], objV[3];
+                        for(int i = 0; i < 3; i++) {
+                            camV[i] = cam.getCamPos(i);
+                            objV[i] = dObj->CIMat(i,3);
+                        }
+                        VFM_Spherical(camV, objV);
+                    }
+                }
+            }
+            glCallList(gl_renderlist+dObj->RenderIndex);
+            //RenderDrawable(dObj,1,cam);
+            glPopMatrix();
+        }
     }
-	glPopMatrix();
+    glPopMatrix();
 }
 
 int prpengine::loadHeadSpinMipmapTexture(plKey mipmapkey,int texname) {
@@ -521,7 +506,7 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
             glBindTexture(GL_TEXTURE_2D, texname);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexImage2D(GL_TEXTURE_2D, il, GL_RGBA, mipmapimage->getLevelWidth(il), mipmapimage->getLevelHeight(il), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, mipmapimage->getLevelData(il));
         }
@@ -560,7 +545,26 @@ int prpengine::getTextureIDFromKey(plKey in_key) {
     return -1;
 }
 
-
+void prpengine::UnloadObjects(int sequenceprefix) {
+    for (size_t i = 0; i < TextureList.size(); i++) {
+		if (TextureList[i]->key->getLocation().getSeqPrefix() == sequenceprefix) {
+			TextureList.erase(TextureList.begin()+i);
+			i-=1;
+		}
+	}
+    for (size_t i = 0; i < DrawableList.size(); i++) {
+		if (DrawableList[i]->Owner->getLocation().getSeqPrefix() == sequenceprefix) {
+			DrawableList.erase(DrawableList.begin()+i);
+			i-=1;
+		}
+	}
+    for (size_t i = 0; i < AllLoadedSceneObjects.size(); i++) {
+		if (AllLoadedSceneObjects[i]->getLocation().getSeqPrefix() == sequenceprefix) {
+			AllLoadedSceneObjects.erase(AllLoadedSceneObjects.begin()+i);
+			i-=1;
+		}
+	}
+}
 
     //if (rendermode == 0) {
     //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

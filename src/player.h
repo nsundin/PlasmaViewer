@@ -3,6 +3,7 @@
 
 class Player {
 public:
+	void SetStill();
 	bool isMovingForward;
 	bool isMovingBackward;
 	bool isTurningRight;

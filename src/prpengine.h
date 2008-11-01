@@ -33,9 +33,10 @@
 
 class prpengine {
 public:
+	void UnloadObjects(int sequenceprefix);
 	void draw(camera &cam);
 	void LoadTextures(std::vector<plKey> Textures);
-	void UpdateList(bool wireframe, bool firstTime, camera &cam);
+	void UpdateList(bool wireframe);
 
 	void SortDrawableList();
 	void PrintObjects();
@@ -44,7 +45,7 @@ public:
 	void AppendClustersToDrawList(std::vector<plKey> clusters);
 
 
-	void AttemptToSetPlayerToLinkPointDefault(std::vector<plKey> SObjects,camera &cam);
+	void AttemptToSetPlayerToLinkPointDefault(camera &cam);
 	void AddSceneObjectToDrawableList(plKey sobjectkey);
 	void AppendObjectsToDrawList(std::vector<plKey> SObjects);
 
@@ -53,6 +54,7 @@ public:
 	void NextSpawnPoint(camera &cam);
 	void PrevSpawnPoint(camera &cam);
 	bool SetSpawnPoint(plString name, camera &cam);
+	std::vector<plKey> AllLoadedSceneObjects;
 	//bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs);
 private:
 	std::vector<TextureObject*> TextureList;
@@ -60,6 +62,7 @@ private:
 	
 	GLint gl_renderlist;
 	GLint gl_rendercount;
+
 	GLuint* gl_texlist;
 	int getTextureIDFromKey(plKey key);
 	int loadHeadSpinMipmapTexture(plKey mipmapkey,int texname);

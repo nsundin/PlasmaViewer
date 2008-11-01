@@ -14,20 +14,35 @@
 #include "prpengine.h"
 #include "window.h"
 #include "player.h"
-#include "console.h"
+#include "PlayerConsole.h"
+#include "DynText.h"
 
-std::vector<plKey> GlobalSceneObjectList;
+void GL_init();
+void KeyDownTrue(bool* var, unsigned press_type);
+static void KeyCallback(SDL_keysym* keysym,unsigned int type);
+void ProcessConsoleCommand(const char * text);
+void ProcessEvents();
+void drawLoading(float loaded, float loaded2);
+void drawSecondaryProgress(float progress);
+void MotionHandler();
+void startGUI(int window_w,int window_h);
+void endGUI();
+void LoadLocation(const plLocation &loc);
+int Load(const char* filename);
+void UnloadAge(const plString agename);
+void draw();
+int main(int argc, char* argv[]);
 
-//("FreeMono.ttf",18,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
+//global stuff
+plString base_program_path;
 
-int vpaint = 1;
-bool wireframe = false;
-
+PlayerConsole plasmaconsole;
 window SDLWindow;
 plResManager rm;
 camera cam;
 Player currentPlayer;
 prpengine prp_engine;
+//end of global stuff
 
 void GL_init() {
     glDisable(GL_LIGHTING);
@@ -36,18 +51,20 @@ void GL_init() {
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearAccum(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 void KeyDownTrue(bool* var, unsigned press_type) {
-	if (press_type == SDL_KEYDOWN)
-		*var = true;
-	else
-		*var = false;
+    if (press_type == SDL_KEYDOWN)
+        *var = true;
+    else
+        *var = false;
 }
 static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
     switch(keysym->sym) {
         case SDLK_ESCAPE:
-            if (type == SDL_KEYDOWN) SDLWindow.quit(0);
+            if (type == SDL_KEYDOWN)
+                plasmaconsole.isHighlighted = false;
             break;
  //Player Control Keys
         case SDLK_LEFT:
@@ -55,52 +72,91 @@ static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
             break;
         case SDLK_RIGHT:
             KeyDownTrue(&currentPlayer.isTurningRight,type);
-			break;
+            break;
         case SDLK_UP:
             KeyDownTrue(&currentPlayer.isMovingForward,type);
             break;
         case SDLK_DOWN:
-			KeyDownTrue(&currentPlayer.isMovingBackward,type);
-            break;
-        case SDLK_x:
-			KeyDownTrue(&currentPlayer.isMovingDown,type);
-            break;
-        case SDLK_z:
-			KeyDownTrue(&currentPlayer.isMovingUp,type);
+            KeyDownTrue(&currentPlayer.isMovingBackward,type);
             break;
         case SDLK_LSHIFT:
-			KeyDownTrue(&currentPlayer.isRun,type);
+            KeyDownTrue(&currentPlayer.isRun,type);
             break;
         case SDLK_RSHIFT:
-			KeyDownTrue(&currentPlayer.isRun,type);
+            KeyDownTrue(&currentPlayer.isRun,type);
             break;
+//letter control-keys
+        case SDLK_x:
+            if (!plasmaconsole.isHighlighted)
+                KeyDownTrue(&currentPlayer.isMovingDown,type);
+            break;
+        case SDLK_z:
+            if (!plasmaconsole.isHighlighted)
+                KeyDownTrue(&currentPlayer.isMovingUp,type);
+            break;
+
 //Other Keys
-        case SDLK_d:
-            if (type == SDL_KEYDOWN)
-                printf("You are facing %f rads\n",cam.angle);
-            break;
-        case SDLK_l:
-            if (type == SDL_KEYDOWN)
-                printf("You are at (%f, %f, %f)\n",cam.getCamPos(0), cam.getCamPos(1),cam.getCamPos(2));
-            break;
-        case SDLK_p:
-            if (type == SDL_KEYDOWN)
-                prp_engine.PrintObjects();
-            break;
-        case SDLK_s:
-            if (type == SDL_KEYDOWN) {
-                if (currentPlayer.isRun) prp_engine.PrevSpawnPoint(cam);
-                else prp_engine.NextSpawnPoint(cam);
-            }
-            break;
-        case SDLK_w:
-            if (type == SDL_KEYDOWN){
-                wireframe = !wireframe;
-                prp_engine.UpdateList(wireframe,true,cam);
-            }
-            break;
+        //case SDLK_d:
+        //    if (type == SDL_KEYDOWN)
+        //        printf("You are facing %f rads\n",cam.angle);
+        //    break;
+        //case SDLK_l:
+        //    if (type == SDL_KEYDOWN)
+        //        printf("You are at (%f, %f, %f)\n",cam.getCamPos(0), cam.getCamPos(1),cam.getCamPos(2));
+        //    break;
+        //case SDLK_p:
+        //    if (type == SDL_KEYDOWN)
+        //        prp_engine.PrintObjects();
+        //    break;
+        //case SDLK_s:
+        //    if (type == SDL_KEYDOWN) {
+        //        if (currentPlayer.isRun) prp_engine.PrevSpawnPoint(cam);
+        //        else prp_engine.NextSpawnPoint(cam);
+        //    }
+        //    break;
+//        case SDLK_w:
+//            if (type == SDL_KEYDOWN){
+//                wireframe = !wireframe;
+//                prp_engine.UpdateList(wireframe,true,cam);
+//            }
+//            break;
         default:
             break;
+    }
+}
+
+void ProcessConsoleCommand(const char * text) {
+    printf("%s\n",text);
+    //link just prints for now
+    if (plString(text).startsWith("/link")) {
+        if (plString(text).split(' ').size() < 2) {
+            printf("You're linking to D'ni...  HA, not so quick. :F\n");		
+            return;
+        }
+        plString location = plString(text).split(' ')[1];
+        printf("Location: %s\n",location.cstr());
+    }
+    else if (plString(text).startsWith("/unload")) {
+        if (plString(text).split(' ').size() < 2) 
+            return;
+        plString agename = plString(text).split(' ')[1];
+        UnloadAge(agename);
+    }
+    else if (plString(text).startsWith("/load")) {
+        if (plString(text).split(' ').size() < 2) 
+            return;
+        plString filename = plString(text).split(' ')[1];
+        Load(filename);
+        SDLWindow.resize();
+    }
+    else if (plString(text) == "/spawn") {
+        prp_engine.NextSpawnPoint(cam);
+    }
+    else if (plString(text) == "/spawnlast") {
+        prp_engine.PrevSpawnPoint(cam);
+    }
+    else if (plString(text) == "/updatelist") {
+        prp_engine.UpdateList(false);
     }
 }
 
@@ -109,9 +165,24 @@ void ProcessEvents() {
     while(SDL_PollEvent(&event)) {
         if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
             KeyCallback(&event.key.keysym,event.type);
-//            if (event.key.keysym.sym>27){
-//                std::cout << char(event.key.keysym.unicode);
-//            }
+            if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_BACKSPACE) plasmaconsole.backSpace();
+                if (event.key.keysym.sym == SDLK_RETURN) {
+                    if (plasmaconsole.isTextInTypeBuffer()) {
+                        plasmaconsole.isHighlighted = false;
+                        ProcessConsoleCommand(plasmaconsole.enter().c_str());
+                    }
+                }
+                if (event.key.keysym.sym > 31 && event.key.keysym.sym < 159) {
+                    if (plasmaconsole.isHighlighted == false && event.key.keysym.sym != SDLK_x && event.key.keysym.sym != SDLK_z) {
+                        currentPlayer.SetStill();
+                        plasmaconsole.isHighlighted = true;
+                    }
+                    if (plasmaconsole.isHighlighted) {
+                        plasmaconsole.addCharToTypeBuffer(char(event.key.keysym.unicode));
+                    }
+                }
+            }
             break;
         }
         if (event.type == SDL_VIDEORESIZE) {
@@ -126,7 +197,6 @@ void ProcessEvents() {
         }
     }
 }
-
 
 void drawLoading(float loaded, float loaded2) {
     const float inset = 48.0f;
@@ -146,7 +216,7 @@ void drawLoading(float loaded, float loaded2) {
     float barwidth = fullbarwidth*primary;
     float barwidth2 = fullbarwidth*secondary;
 
-	glRectf(inset+2.0f, 67.0f, inset+2.0+barwidth, 52.0f);
+    glRectf(inset+2.0f, 67.0f, inset+2.0+barwidth, 52.0f);
     glBegin(GL_LINE_LOOP);
     glVertex2f(inset,68.0f);
     glVertex2f(SDLWindow.window_w-inset-1.0,68.0f);
@@ -198,15 +268,32 @@ void MotionHandler() {
     }
 }
 
-void LoadLocation(const plLocation &loc) {
-	prp_engine.LoadTextures(rm.getKeys(loc, kMipmap));
-    prp_engine.AppendObjectsToDrawList(rm.getKeys(loc, kSceneObject));
-	prp_engine.AppendClustersToDrawList(rm.getKeys(loc, kClusterGroup));
+void startGUI(int window_w,int window_h) {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0,window_w, 0, window_h);
+    glScalef(1, -1, 1);
+    glTranslatef(0, -window_h, 0);
+    glMatrixMode(GL_MODELVIEW);
+}
 
-	std::vector<plKey> PageScnObjs = rm.getKeys(loc, kSceneObject);
+
+void endGUI() {
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
+
+void LoadLocation(const plLocation &loc) {
+    prp_engine.LoadTextures(rm.getKeys(loc, kMipmap));
+    prp_engine.AppendObjectsToDrawList(rm.getKeys(loc, kSceneObject));
+    prp_engine.AppendClustersToDrawList(rm.getKeys(loc, kClusterGroup));
+
+    std::vector<plKey> PageScnObjs = rm.getKeys(loc, kSceneObject);
     for (size_t i = 0; i < PageScnObjs.size(); i++) {
-		GlobalSceneObjectList.push_back(PageScnObjs[i]);
-	}
+        prp_engine.AllLoadedSceneObjects.push_back(PageScnObjs[i]);
+    }
 }
 
 int Load(const char* filename) {
@@ -264,91 +351,90 @@ int Load(const char* filename) {
     return 1;
 }
 
-void startGUI(int window_w,int window_h) {
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	gluOrtho2D(0,window_w, 0, window_h);
-	glScalef(1, -1, 1);
-	glTranslatef(0, -window_h, 0);
-	glMatrixMode(GL_MODELVIEW);
-}
-
-
-void endGUI() {
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-}
-
-void drawToScreen(char* text,int posX,int PosY) {
-	glPushMatrix();
-	startGUI(SDLWindow.window_w,SDLWindow.window_h);
-	glLoadIdentity();
-	//render stuff
-	endGUI();
-
-	glPopMatrix();
+void UnloadAge(const plString agename) {
+    if (!rm.FindAge(agename)) return;
+    plAgeInfo * age = rm.FindAge(agename);
+    prp_engine.UnloadObjects(age->getSeqPrefix());
+    prp_engine.UpdateList(false);
+    rm.UnloadAge(agename);
+    printf("%s unloaded. %i locations loaded\n",agename.cstr(),	rm.getLocations().size());
 }
 
 void draw() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
 //	std::cout << SDL_GetTicks() << std::endl;
     glEnable(GL_DEPTH_TEST);
 
-	prp_engine.draw(cam);
-	MotionHandler();
+    prp_engine.draw(cam);
+    MotionHandler();
     cam.update();
-
-//	addToBuffer("Hello, quick brown fox!");
-//	printToLine("");
-	SDL_GL_SwapBuffers();
+//start GUI stuff
+    glPushMatrix();
+    startGUI(SDLWindow.window_w,SDLWindow.window_h);
+    glLoadIdentity();
+    plasmaconsole.draw(SDLWindow.window_w,SDLWindow.window_h);
+    endGUI();
+    glPopMatrix();
+//end GUI stuff
+    SDL_GL_SwapBuffers();
 }
 
 
 int main(int argc, char* argv[]) {
-	SDLWindow.init_SDL();
+    SDLWindow.init_SDL();
     GL_init();
+    std::cout << strlen(argv[0]);
 
+    base_program_path = (plString(argv[0]).beforeLast(PATHSEP)+PATHSEP);
+    if (base_program_path.len() == 1) {
+        base_program_path = "";
+    }
+    printf("%s\n",base_program_path.cstr());
+    
+    plString fontpath = base_program_path+ plString("FreeMono.ttf");
+    
+    printf("%s\n",fontpath.cstr());
+
+    plasmaconsole.texthandler = new DynText(fontpath.cstr(),18,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
     plDebug::Init(plDebug::kDLAll);
 
     //drawLoading(0.0f); //give 'em something to look at before the first page loads
     if (argc < (int) 2) {
-		Load("C:\\Personal_District_psnlMYSTII.prp");
+        Load("ages\\Kveer.age");
         printf("expects prp-path as first argument, loading default\n");
 //		return 0;
     }
-	else {
+    else {
         Load(argv[1]);
-	}
-	printf(argv[0]);
-    prp_engine.UpdateList(wireframe,true,cam);
+    }
+    prp_engine.UpdateList(false);
 
-	prp_engine.AttemptToSetFniSettings(plString(argv[1]));
+    prp_engine.AttemptToSetFniSettings(plString(argv[1]));
     
-	prp_engine.AttemptToSetPlayerToLinkPointDefault(GlobalSceneObjectList,cam);
+    prp_engine.AttemptToSetPlayerToLinkPointDefault(cam);
 
 	SDLWindow.resize();
-	while(1) {
+
+    while(1) {
         ProcessEvents();
         draw();
     }
     return 0;
 }
 
-	//glEnable(GL_TEXTURE_2D);
-	//glBindTexture(GL_TEXTURE_2D, 1);
+    //glEnable(GL_TEXTURE_2D);
+    //glBindTexture(GL_TEXTURE_2D, 1);
 
-	//glColor3f(1.0f,1.0f,1.0f);
-	//glBegin(GL_POLYGON);
+    //glColor3f(1.0f,1.0f,1.0f);
+    //glBegin(GL_POLYGON);
 
-	//glTexCoord2i(0,1);
+    //glTexCoord2i(0,1);
  //   glVertex2f(0.0f,100.0f);
 
-	//glTexCoord2i(1,1);
+    //glTexCoord2i(1,1);
  //   glVertex2f(100.0f,100.0f);
-	//glTexCoord2i(1,0);
+    //glTexCoord2i(1,0);
  //   glVertex2f(100.0f,0.0f);
-	//glTexCoord2i(0,0);
+    //glTexCoord2i(0,0);
  //   glVertex2f(0.0f,0.0f);
  //   glEnd();
