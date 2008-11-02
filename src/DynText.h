@@ -50,8 +50,10 @@ public:
 	DynText(const char * address, int pointSize, int style, float fgRed, float fgGreen, float fgBlue, float bgRed, float bgGreen, float bgBlue);
 	~DynText();
 	void initFont();
+    int GetPipeWidth();
 	int getLineSkip();
 	int getHeight();
+	int getCharPos(char *text, int x, int y, int charInd);
 	void textSize(char *text, SDL_Rect *r);
 	void drawText(char *text, int x, int y);
 };

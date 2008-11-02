@@ -64,14 +64,20 @@ static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
     switch(keysym->sym) {
         case SDLK_ESCAPE:
             if (type == SDL_KEYDOWN)
-                plasmaconsole.isHighlighted = false;
+                plasmaconsole.escape();
             break;
  //Player Control Keys
         case SDLK_LEFT:
-            KeyDownTrue(&currentPlayer.isTurningLeft,type);
+            if (plasmaconsole.isHighlighted && type == SDL_KEYDOWN)
+                plasmaconsole.CursorMoveLeft();
+            else
+                KeyDownTrue(&currentPlayer.isTurningLeft,type);
             break;
         case SDLK_RIGHT:
-            KeyDownTrue(&currentPlayer.isTurningRight,type);
+            if (plasmaconsole.isHighlighted && type == SDL_KEYDOWN) 
+                plasmaconsole.CursorMoveRight();
+            else
+                KeyDownTrue(&currentPlayer.isTurningRight,type);
             break;
         case SDLK_UP:
             KeyDownTrue(&currentPlayer.isMovingForward,type);
@@ -85,7 +91,6 @@ static void KeyCallback(SDL_keysym* keysym,unsigned int type) {
         case SDLK_RSHIFT:
             KeyDownTrue(&currentPlayer.isRun,type);
             break;
-//letter control-keys
         case SDLK_x:
             if (!plasmaconsole.isHighlighted)
                 KeyDownTrue(&currentPlayer.isMovingDown,type);
@@ -157,6 +162,12 @@ void ProcessConsoleCommand(const char * text) {
     }
     else if (plString(text) == "/updatelist") {
         prp_engine.UpdateList(false);
+    }
+    else if (plString(text).startsWith("/setfni")) {
+        if (plString(text).split(' ').size() < 2) 
+            return;
+        plString filename = plString(text).split(' ')[1];
+        prp_engine.AttemptToSetFniSettings(filename);
     }
 }
 
@@ -348,6 +359,7 @@ int Load(const char* filename) {
         }
         catch(...) {}
     }
+    prp_engine.UpdateSpawnPoints();
     return 1;
 }
 
@@ -401,7 +413,7 @@ int main(int argc, char* argv[]) {
     //drawLoading(0.0f); //give 'em something to look at before the first page loads
     if (argc < (int) 2) {
         Load("ages\\Kveer.age");
-        printf("expects prp-path as first argument, loading default\n");
+        printf("can use prp or age-path as first argument, loading default\n");
 //		return 0;
     }
     else {
@@ -409,11 +421,13 @@ int main(int argc, char* argv[]) {
     }
     prp_engine.UpdateList(false);
 
-    prp_engine.AttemptToSetFniSettings(plString(argv[1]));
+    plString fnipath = (plString(argv[1]).beforeLast('.')+plString(".fni"));
+
+    prp_engine.AttemptToSetFniSettings(fnipath);
     
     prp_engine.AttemptToSetPlayerToLinkPointDefault(cam);
 
-	SDLWindow.resize();
+    SDLWindow.resize();
 
     while(1) {
         ProcessEvents();

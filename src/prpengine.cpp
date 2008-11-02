@@ -71,15 +71,18 @@ bool prpengine::SetSpawnPoint(plString name, camera &cam) {
     }
     return false;
 }
-void prpengine::AttemptToSetPlayerToLinkPointDefault(camera &cam) {
-    // let's get the linkinpointdefault (if we can)
-    //printf("\n: LinkInPointDefault :\n");
-    //printf("lookin'...\n");
+
+void prpengine::UpdateSpawnPoints() {
     for (size_t i = 0; i < AllLoadedSceneObjects.size(); i++) {
         if(getModifierOfType(plSceneObject::Convert(AllLoadedSceneObjects[i]->getObj()), plSpawnModifier::Convert))
             SpawnPoints.push(AllLoadedSceneObjects[i]);
     }
-//    curSpawnPoint = 0;
+}
+
+void prpengine::AttemptToSetPlayerToLinkPointDefault(camera &cam) {
+    // let's get the linkinpointdefault (if we can)
+    //printf("\n: LinkInPointDefault :\n");
+    //printf("lookin'...\n");
     if(!SetSpawnPoint(plString("LinkInPointDefault"), cam)) {
         printf("Couldn't find a link-in point\n");
         printf("...Attempting to spawn to next spawn-point on list instead.\n");
@@ -158,9 +161,8 @@ void prpengine::AppendObjectsToDrawList(std::vector<plKey> SObjects) {
         AddSceneObjectToDrawableList(SObjects[i]);
     }
 }
-void prpengine::AttemptToSetFniSettings(plString filename) {
+void prpengine::AttemptToSetFniSettings(plString fnipath) {
     fni fniFile;
-    plString fnipath = (filename.beforeLast('.')+plString(".fni"));
     if (fniFile.load(fnipath)) {
         printf("\n: FNI File :\n");
         glClearColor(fniFile.fClearColor[0], fniFile.fClearColor[1], fniFile.fClearColor[2], 1.0f);
@@ -223,7 +225,7 @@ void prpengine::renderClusterMesh(hsTArray<plSpanTemplate::Vertex> verts, const 
         plKey layerkey = material->getLayer(layeridx);
         plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
         size_t uvSrc = layer->getUVWSrc() & 0xFFFF;
-        SetLayerParams(layer);
+        SetLayerParams(layer,false);
         //now our mesh
         glBegin(GL_TRIANGLES);
         for (size_t j=0; j < (size_t)(NumTris * 3); j++) {
@@ -247,7 +249,7 @@ void prpengine::renderSpanMesh(hsTArray<plGBufferVertex> verts, hsTArray<unsigne
         plKey layerkey = material->getLayer(layeridx);
         plLayerInterface* layer = plLayerInterface::Convert(layerkey->getObj());
         size_t uvSrc = layer->getUVWSrc() & 0xFFFF;
-        SetLayerParams(layer);
+        SetLayerParams(layer,isWaveset);
         glBegin(GL_TRIANGLES);
         for (size_t j = 0; j < indices.getSize(); j++) {
             int indice = indices[j];
@@ -260,8 +262,10 @@ void prpengine::renderSpanMesh(hsTArray<plGBufferVertex> verts, hsTArray<unsigne
             glColor4ub(col.r,col.g,col.b,col.a==1?255:col.a);
             
             glNormal3f(verts[indice].fNormal.X,verts[indice].fNormal.Y,verts[indice].fNormal.Z);
-            if (isWaveset)
+            if (isWaveset) {
+                glColor3ub(col.r,col.g,col.b);
                 glVertex3f(pos.X,pos.Y, WaterHeight);
+            }
             else
                 glVertex3f(pos.X,pos.Y ,pos.Z);
         }
@@ -270,7 +274,7 @@ void prpengine::renderSpanMesh(hsTArray<plGBufferVertex> verts, hsTArray<unsigne
     }
 }
 
-void prpengine::SetLayerParams(plLayerInterface* layer) {
+void prpengine::SetLayerParams(plLayerInterface* layer, bool isWaveset) {
     if (layer->getTexture()) {
         if (layer->getTexture().isLoaded()) {
             int texID = getTextureIDFromKey(layer->getTexture());
@@ -292,7 +296,7 @@ void prpengine::SetLayerParams(plLayerInterface* layer) {
         glDisable(GL_TEXTURE_2D);
     }
     bool is2Sided = (layer->getState().fMiscFlags & hsGMatState::kMiscTwoSided) != 0;
-    if (is2Sided) {
+    if (is2Sided || isWaveset) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDisable(GL_CULL_FACE);
     }

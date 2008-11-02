@@ -14,6 +14,9 @@
 
 class PlayerConsole {
 public:
+	void escape();
+	void CursorMoveRight();
+	void CursorMoveLeft();
 	bool isHighlighted;
 	bool isTextInTypeBuffer();
 	void draw(int window_w,int window_h);
@@ -23,6 +26,7 @@ public:
 	void addCharToTypeBuffer(char c);
 	DynText * texthandler;
 private:
+	int cursorInd;
 	std::string TypeBuffer;
 	std::string ReturnBuffer;
 	std::vector<std::string> scrolltxt;

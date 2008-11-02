@@ -9,17 +9,17 @@ Original Code written by:
   + blog:  www.Stonewolf.net             +
   + web:   www.GameProgrammer.com        +
   +--------------------------------------+
-	http://www.devolution.com/pipermail/sdl/2004-December/066119.html
-	http://www.oreillynet.com/pub/au/1205
+    http://www.devolution.com/pipermail/sdl/2004-December/066119.html
+    http://www.oreillynet.com/pub/au/1205
 **/
 
 
 static int powerOfTwo(int input) {
-	int value = 1;
-	while (value < input) {
-		value <<= 1;
-	}
-	return value;
+    int value = 1;
+    while (value < input) {
+        value <<= 1;
+    }
+    return value;
 }
 
 
@@ -147,15 +147,15 @@ DynText::DynText(const char * address, int pointSize, int style, float fgRed, fl
     bgRed(bgRed), bgGreen(bgGreen), bgBlue(bgBlue),
     ttfFont(NULL)
   {
-	  if (TTF_Init() < 0) {
+      if (TTF_Init() < 0) {
         printf("Can't init SDL_ttf");
       }
-	  initFont();
+      initFont();
   }
 
 
 DynText::~DynText() {
-	TTF_Quit();
+    TTF_Quit();
 }
 
 void DynText::initFont() {
@@ -163,7 +163,7 @@ void DynText::initFont() {
 
     ttfFont = TTF_OpenFont(address, pointSize);
     if (NULL == ttfFont) {
-		printf("Can't open font file at: %s",address);
+        printf("Can't open font file at: %s",address);
     }
 
     TTF_SetFontStyle(ttfFont, style);
@@ -186,14 +186,14 @@ void DynText::initFont() {
       glyphs[i].pic = NULL;
       glyphs[i].tex = 0;
     }
-  }
+}
 
 int DynText::getLineSkip() {
-	return lineSkip;
+    return lineSkip;
 }
 
 int DynText::getHeight() {
-	return height;
+    return height;
 }
 
 void DynText::textSize(char *text, SDL_Rect *r) {
@@ -272,3 +272,21 @@ void DynText::drawText(char *text, int x, int y) {
     glPopAttrib();
 }
 
+int DynText::getCharPos(char *text, int x, int y, int charInd) {
+    int count = 0;
+    while (0 != *text) {
+        if ((minGlyph <= *text) && (*text <= maxGlyph)) {
+			if (charInd == count) {
+			    return x;
+			}
+            x += glyphs[((int)*text)].advance;
+        }
+        count++;
+        text++;
+    }
+	return 0;
+}
+
+int DynText::GetPipeWidth() { //TUBES!
+	return glyphs[((int)'|')].maxx;
+}
