@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <algorithm>
 #include <vector>
-#include <pthread.h>
 
 #include <SDL/SDL_opengl.h>
 
@@ -24,7 +23,7 @@
 
 class DataPool {
 public:
-	pthread_mutex_t * mutex;
+//	pthread_mutex_t * mutex;
 
 	void AppendSceneObjectsToList(std::vector<plKey> SObjects);
 	void AppendSceneObjectToDrawList(plKey sobjectkey);

@@ -58,30 +58,24 @@ void DataPool::AppendSceneObjectToDrawList(plKey sobjectkey) {
 }
 
 void DataPool::AppendClustersToDrawList(std::vector<plKey> clusters) {
-//	pthread_mutex_lock (mutex);
     for (size_t i = 0; i < clusters.size(); i++) {
         if (clusters[i].Exists()) {
             AppendClusterGroupToDrawList(clusters[i]);
             printf("ADDED CLUSTER: %s\n",clusters[i]->getName().cstr());
         }
     }
-//	pthread_mutex_unlock(mutex);
 }
 
 void DataPool::AppendSceneObjectsToDrawList(std::vector<plKey> SObjects) {
-//	pthread_mutex_lock (mutex);
     for (size_t i=0; i < SObjects.size(); i++) {
         AppendSceneObjectToDrawList(SObjects[i]);
     }
-//	pthread_mutex_unlock(mutex);
 }
 
 void DataPool::AppendSceneObjectsToList(std::vector<plKey> SObjects) {
-//	pthread_mutex_lock (mutex);
     for (size_t i=0; i < SObjects.size(); i++) {
         AllLoadedSceneObjects.push_back(SObjects[i]);
     }
-//	pthread_mutex_unlock(mutex);
 }
 
 void DataPool::PrintObjects() {

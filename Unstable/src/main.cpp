@@ -1,4 +1,3 @@
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "DataPool/DataPool.h"
@@ -6,26 +5,17 @@
 #include "SDLWindow.h"
 #include "ResManager/plResManager.h"
 #include "Control/LinkManager.h"
+#include "SDL/SDL_thread.h"
+#include "SDL/SDL_mutex.h"
 
 SDLWindow window;
 DataPool pool;
 MainRenderer renderer;
 LinkManager lnkmgr;
 Camera* cam = pool.createCamera();
+SDL_mutex* mutex;
 
-pthread_t callThd[2];
-pthread_mutex_t mutex;
 
-void init() {
-	window.init_SDL();
-	window.GL_init();
-	pool.mutex = &mutex;
-	renderer.pool = &pool;
-	lnkmgr.pool = &pool;
-	lnkmgr.rm = new plResManager;
-	lnkmgr.Load("C:\\Personal_District_psnlMYSTII.prp");
-	renderer.UpdateList(false);
-}
 
 void ProcessEvents() {
     SDL_Event event;
@@ -66,47 +56,50 @@ void ProcessEvents() {
 }
 
 
-void* DrawFunc(void* arg) {
-	init();
+int DrawFunc(void* arg) {
+	printf("Draw\n");
+	renderer.UpdateList(false);
 	while (1) {
-		ProcessEvents();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		renderer.draw();
 
-		pthread_mutex_lock(&mutex);
+		SDL_mutexP(mutex);
 		cam->turn();
 		cam->update();
-		pthread_mutex_unlock(&mutex);
+		SDL_mutexV(mutex);
 		SDL_GL_SwapBuffers();
 	}
-	pthread_exit(0);
 	return 0;
 }
 
-void* UpdatePos(void* arg) {
+int UpdatePos(void* arg) {
 	while (1) {
 		Sleep(10);
-		pthread_mutex_lock(&mutex);
+		SDL_mutexP(mutex);
 		if (cam->angle > 365.0f)
 			cam->angle = 0.0f;
 		cam->angle += 0.001f;
-		pthread_mutex_unlock(&mutex);
+		SDL_mutexV(mutex);
 	}
-	pthread_exit(0);
 	return 0;
 }
 
 int main(int argc, char** argv) {
-	void *status;
-	pthread_mutex_init(&mutex, NULL);
+	window.init_SDL();
+	window.GL_init();
 
-	if (pthread_create(&callThd[0], NULL, DrawFunc, NULL))
-		return 0;
-	if (pthread_create(&callThd[1], NULL, UpdatePos, NULL))
-		return 0;
+	renderer.pool = &pool;
+	lnkmgr.pool = &pool;
+	lnkmgr.rm = new plResManager;
+	lnkmgr.Load("C:\\Personal_District_psnlMYSTII.prp");
+
+	SDL_Thread* threads[2];
+	mutex = SDL_CreateMutex();
+	threads[0] = SDL_CreateThread(DrawFunc,NULL);
+	threads[1] = SDL_CreateThread(UpdatePos,NULL);
 	while (1) {
 		ProcessEvents();
 	}
-	pthread_mutex_destroy(&mutex);
+	SDL_DestroyMutex(mutex);
 	return 1;
 }
