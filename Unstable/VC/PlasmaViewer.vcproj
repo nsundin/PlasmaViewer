@@ -175,11 +175,11 @@
 			Name="DataPool"
 			>
 			<File
-				RelativePath="..\src\Draw\camera.cpp"
+				RelativePath="..\src\DataPool\camera.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\Draw\camera.h"
+				RelativePath="..\src\DataPool\camera.h"
 				>
 			</File>
 			<File
