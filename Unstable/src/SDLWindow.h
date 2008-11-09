@@ -8,6 +8,8 @@
 class SDLWindow {
 public:
 	DataPool* pool;
+	void KeyCallback(SDL_keysym* keysym,unsigned int type);
+	void KeyDownTrue(bool* var, unsigned press_type);
 	SDLWindow(DataPool* pool);
 	void ProcessEvents();
 	void GLDraw(MainRenderer* renderer,Camera* cam);

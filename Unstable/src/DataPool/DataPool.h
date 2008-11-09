@@ -25,6 +25,7 @@
 
 class DataPool {
 public:
+	Player* activePlayer;
 	pthread_mutex_t * mutex;
 	void LoadTextures(std::vector<plKey> Textures);
 	int loadHeadSpinMipmapTexture(plKey mipmapkey,int texname);

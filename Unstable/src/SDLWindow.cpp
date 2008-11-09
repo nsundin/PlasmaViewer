@@ -61,10 +61,11 @@ void SDLWindow::GLDraw(MainRenderer* renderer,Camera* cam) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 	renderer->draw();
+
 	pthread_mutex_lock(pool->mutex);
-	cam->turn();
 	cam->update();
 	pthread_mutex_unlock(pool->mutex);
+
 	SDL_GL_SwapBuffers();
 }
 void SDLWindow::quit(int code) {
@@ -73,19 +74,64 @@ void SDLWindow::quit(int code) {
     exit(code);
 }
 
+void SDLWindow::KeyDownTrue(bool* var, unsigned press_type) {
+    if (press_type == SDL_KEYDOWN)
+        *var = true;
+    else
+        *var = false;
+}
+
+void SDLWindow::KeyCallback(SDL_keysym* keysym,unsigned int type) {
+    switch(keysym->sym) {
+//        case SDLK_ESCAPE:
+//            if (type == SDL_KEYDOWN)
+//                plasmaconsole.escape();
+//            break;
+ //Player Control Keys
+        case SDLK_LEFT:
+			KeyDownTrue(&pool->activePlayer->isTurningLeft,type);
+			break;
+        case SDLK_RIGHT:
+			KeyDownTrue(&pool->activePlayer->isTurningRight,type);
+            break;
+        case SDLK_UP:
+            KeyDownTrue(&pool->activePlayer->isMovingForward,type);
+            break;
+        case SDLK_DOWN:
+            KeyDownTrue(&pool->activePlayer->isMovingBackward,type);
+            break;
+        case SDLK_LSHIFT:
+            KeyDownTrue(&pool->activePlayer->isRun,type);
+            break;
+        case SDLK_RSHIFT:
+            KeyDownTrue(&pool->activePlayer->isRun,type);
+            break;
+        case SDLK_x:
+			KeyDownTrue(&pool->activePlayer->isMovingDown,type);
+            break;
+        case SDLK_z:
+			KeyDownTrue(&pool->activePlayer->isMovingUp,type);
+            break;
+        default:
+            break;
+    }
+}
+
 void SDLWindow::ProcessEvents() {
     SDL_Event event;
     while(SDL_PollEvent(&event)) {
-        if (event.type == SDL_VIDEORESIZE && event.resize.w > 0 && event.resize.h > 0) {
+        if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+            KeyCallback(&event.key.keysym,event.type);
+		}
+        else if (event.type == SDL_VIDEORESIZE && event.resize.w > 0 && event.resize.h > 0) {
             window_w = event.resize.w;
             window_h = event.resize.h;
             resize();
             break;
         }
-        if (event.type == SDL_QUIT) {
+        else if (event.type == SDL_QUIT) {
             quit(0);
             break;
         }
     }
 }
-
