@@ -19,14 +19,18 @@ SDLWindow window(&pool);
 pthread_t callThd[2];
 pthread_mutex_t mutex;
 
-void init() {
+const char* StartUpPath;
+
+void init(const char* StartUpAgePath) {
+//	pool.sortFunction = &SortDrawables;
+	pool.SetCurrentCamera(cam);
 	window.init_SDL();
 	window.GL_init();
 	pool.mutex = &mutex;
 	renderer.pool = &pool;
 	lnkmgr.pool = &pool;
 	lnkmgr.rm = new plResManager;
-	lnkmgr.Load("C:\\Program Files\\CyanWorlds\\UruCC\\dat\\Personal.age");
+	lnkmgr.Load(StartUpAgePath);
 	renderer.UpdateList(false);
 	cam->warp(0.0f,0.0f,15.0f);
 }
@@ -63,8 +67,8 @@ void* SDLFunc(void* arg) {
 	Uint32 last_time;
 	Uint32 now_time;
 	Uint32 timefactor;
-	init();
-	window.GLDraw(&renderer,cam);
+	init(StartUpPath);
+	window.GLDraw(&renderer);
 	cam->turn();
 	while (1) {
 		now_time = SDL_GetTicks();
@@ -72,7 +76,7 @@ void* SDLFunc(void* arg) {
 		last_time = now_time;
 //		printf("%i\n",timefactor);
 		MotionHandler(timefactor);
-		window.GLDraw(&renderer,cam);
+		window.GLDraw(&renderer);
 		window.ProcessEvents();
 	}
 	pthread_exit(0);
@@ -94,6 +98,12 @@ void* UpdatePos(void* arg) {
 }
 
 int main(int argc, char** argv) {
+	if (argc > 1) {
+		StartUpPath = argv[1];
+	}
+	else {
+		StartUpPath = "C:\\Program Files\\CyanWorlds\\UruCC\\dat\\Personal.age";
+	}
 	pool.activePlayer = currPlayer;
 	pthread_mutex_init(&mutex, NULL);
 

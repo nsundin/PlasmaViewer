@@ -27,6 +27,7 @@ class DataPool {
 public:
 	Player* activePlayer;
 	pthread_mutex_t * mutex;
+	void SortDrawableList();
 	void LoadTextures(std::vector<plKey> Textures);
 	int loadHeadSpinMipmapTexture(plKey mipmapkey,int texname);
 	void AppendSceneObjectsToList(std::vector<plKey> SObjects);
@@ -44,7 +45,10 @@ public:
 	Player* getPlayer(int PlayerID);
 	Camera* getCamera(int ind);
 	Camera* createCamera();
+	Camera* getCurrentCamera();
+	void SetCurrentCamera(Camera* cam);
 private:
+	Camera* CurrentCamera;
 	std::vector<Camera*> Cameras;
 	std::vector<Player*> Players;
 	std::vector<plKey> AllLoadedSceneObjects;
@@ -55,4 +59,6 @@ private:
     GLuint* gl_texlist;
     hsTArray<plKey> SpawnPoints;
 };
+extern  Camera* cam;
+
 #endif

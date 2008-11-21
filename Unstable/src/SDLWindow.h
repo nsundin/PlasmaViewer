@@ -12,7 +12,7 @@ public:
 	void KeyDownTrue(bool* var, unsigned press_type);
 	SDLWindow(DataPool* pool);
 	void ProcessEvents();
-	void GLDraw(MainRenderer* renderer,Camera* cam);
+	void GLDraw(MainRenderer* renderer);
 	void GL_init();
 	void init_SDL();
 	void resize();

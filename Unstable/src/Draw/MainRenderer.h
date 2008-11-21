@@ -9,6 +9,7 @@
 #include "PRP/Geometry/plDrawableSpans.h"
 #include "../DataPool/DrawableObject.h"
 #include "../DataPool/TextureObject.h"
+#include "../DataPool/camera.h"
 #include "../DataPool/DataPool.h"
 #include "../maths.h"
 #include "Math/hsMatrix44.h"
@@ -16,6 +17,8 @@
 class MainRenderer {
 public:
 	DataPool* pool;
+	void SetCamera(Camera* cam);
+
 	void VFM_Spherical(float *cam, float *worldPos);
 	int RenderDrawable(DrawableObject* dObj, int rendermode);
 	void renderClusterMesh(hsTArray<plSpanTemplate::Vertex> verts, const unsigned short* indices, int NumTris, hsGMaterial* material);

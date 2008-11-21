@@ -220,7 +220,8 @@ void MainRenderer::UpdateList(bool wireframe) {
 
 void MainRenderer::draw() {
     glPushMatrix();
-//    SortDrawableList();
+//    pool->SortDrawableList();
+	
     for (size_t i=0; i < pool->getDrawObjectSize(); i++) {
         DrawableObject *dObj = pool->getDrawObject(i);
         if (dObj->isCluster) {
@@ -239,18 +240,18 @@ void MainRenderer::draw() {
             if (dObj->hasCI) {
                 glMultMatrixf(getMatrixFrom_hsMatrix44(pool->getDrawObject(i)->CIMat));
             }
-            /*if(dObj->vfm) {
+            if(dObj->vfm) {
                 if(dObj->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
                     if(dObj->hasCI) {
                         float camV[3], objV[3];
                         for(int i = 0; i < 3; i++) {
-                            camV[i] = cam.getCamPos(i);
+                            camV[i] = pool->getCurrentCamera()->getCamPos(i);
                             objV[i] = dObj->CIMat(i,3);
                         }
                         VFM_Spherical(camV, objV);
                     }
                 }
-            }*/
+            }
             glCallList(gl_renderlist+dObj->RenderIndex);
             glPopMatrix();
         }

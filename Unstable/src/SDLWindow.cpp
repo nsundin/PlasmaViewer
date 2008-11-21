@@ -57,7 +57,7 @@ void SDLWindow::resize() {
     gluPerspective(80.0f, (double)window_w / (double)window_h, 1.0f, 100000.0f);
 }
 
-void SDLWindow::GLDraw(MainRenderer* renderer,Camera* cam) {
+void SDLWindow::GLDraw(MainRenderer* renderer) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 	renderer->draw();
