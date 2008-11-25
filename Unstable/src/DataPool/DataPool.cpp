@@ -1,22 +1,22 @@
 #include "DataPool.h"
 
-//bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
-//    if(lhs->renderlevel < rhs->renderlevel) return true;
-//    else if(lhs->renderlevel > rhs->renderlevel) return false;
-//    else if(lhs->spanflags < rhs->spanflags) return true;
-//    else if(lhs->spanflags > rhs->spanflags) return false;
-//    else
-//        if(lhs->hasCI && rhs->hasCI) {
-//        float a1 = lhs->CIMat(0,3) - lhs->poolinstance->getCurrentCamera()->getCamPos(0);
-//        float b1 = lhs->CIMat(1,3) - lhs->poolinstance->getCurrentCamera()->getCamPos(1);
-//        float c1 = lhs->CIMat(2,3) - lhs->poolinstance->getCurrentCamera()->getCamPos(2);
-//        float a2 = rhs->CIMat(0,3) - lhs->poolinstance->getCurrentCamera()->getCamPos(0);
-//        float b2 = rhs->CIMat(1,3) - lhs->poolinstance->getCurrentCamera()->getCamPos(1);
-//        float c2 = rhs->CIMat(2,3) - lhs->poolinstance->getCurrentCamera()->getCamPos(2);
-//        return (a1*a1+b1*b1+c1*c1) > (a2*a2+b2*b2+c2*c2);
-//    }
-//    return false;
-//}
+bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
+    if(lhs->renderlevel < rhs->renderlevel) return true;
+    else if(lhs->renderlevel > rhs->renderlevel) return false;
+    else if(lhs->spanflags < rhs->spanflags) return true;
+    else if(lhs->spanflags > rhs->spanflags) return false;
+    else if(lhs->hasCI && rhs->hasCI) {
+		DataPool* poolinst = (DataPool*)lhs->poolinstance;
+        float a1 = lhs->CIMat(0,3) - poolinst->getCurrentCamera()->getCamPos(0);
+        float b1 = lhs->CIMat(1,3) - poolinst->getCurrentCamera()->getCamPos(1);
+        float c1 = lhs->CIMat(2,3) - poolinst->getCurrentCamera()->getCamPos(2);
+        float a2 = rhs->CIMat(0,3) - poolinst->getCurrentCamera()->getCamPos(0);
+        float b2 = rhs->CIMat(1,3) - poolinst->getCurrentCamera()->getCamPos(1);
+        float c2 = rhs->CIMat(2,3) - poolinst->getCurrentCamera()->getCamPos(2);
+        return (a1*a1+b1*b1+c1*c1) > (a2*a2+b2*b2+c2*c2);
+    }
+    return false;
+}
 
 Camera* DataPool::getCurrentCamera() {
 	return CurrentCamera;
@@ -27,13 +27,13 @@ void DataPool::SetCurrentCamera(Camera* cam) {
 
 void DataPool::SortDrawableList() {
 	pthread_mutex_lock(mutex);
-//    std::stable_sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
+    std::stable_sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
 	pthread_mutex_unlock(mutex);
 }
 
 void DataPool::AppendClusterGroupToDrawList(plKey clustergroupkey) {
     DrawableObject* dObj = new DrawableObject;
-//	dObj->poolinstance = this;
+	dObj->poolinstance = this;
     plClusterGroup* cluster = plClusterGroup::Convert(clustergroupkey->getObj());
     dObj->isCluster = true;
     dObj->ClusterGroup = cluster;
@@ -58,7 +58,7 @@ void DataPool::AppendSceneObjectToDrawList(plKey sobjectkey) {
                 continue;
             }
             DrawableObject* dObj = new DrawableObject;
-//			dObj->poolinstance = this;
+			dObj->poolinstance = this;
             if (coord == NULL) {
                 dObj->hasCI = false;
             }

@@ -23,7 +23,7 @@ public:
 	int RenderDrawable(DrawableObject* dObj, int rendermode);
 	void renderClusterMesh(hsTArray<plSpanTemplate::Vertex> verts, const unsigned short* indices, int NumTris, hsGMaterial* material);
 	void renderSpanMesh(hsTArray<plGBufferVertex> verts, hsTArray<unsigned short> indices,hsGMaterial* material,bool isWaveset, float WaterHeight);
-	void SetLayerParams(plLayerInterface* layer, bool isWaveset);
+	unsigned int SetLayerParams(plLayerInterface* layer, bool isWaveset);
 	void UpdateList(bool wireframe);
 	void draw();
 	int getTextureIDFromKey(plKey in_key);

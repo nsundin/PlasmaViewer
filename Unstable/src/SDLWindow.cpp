@@ -63,7 +63,7 @@ void SDLWindow::GLDraw(MainRenderer* renderer) {
 	renderer->draw();
 
 	pthread_mutex_lock(pool->mutex);
-	cam->update();
+	pool->getCurrentCamera()->update();
 	pthread_mutex_unlock(pool->mutex);
 
 	SDL_GL_SwapBuffers();

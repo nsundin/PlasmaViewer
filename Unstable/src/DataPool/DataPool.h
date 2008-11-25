@@ -23,6 +23,8 @@
 #include "player.h"
 #include "camera.h"
 
+bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs);
+
 class DataPool {
 public:
 	Player* activePlayer;
@@ -59,6 +61,5 @@ private:
     GLuint* gl_texlist;
     hsTArray<plKey> SpawnPoints;
 };
-extern  Camera* cam;
 
 #endif

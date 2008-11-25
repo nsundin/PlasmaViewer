@@ -11,7 +11,7 @@
 
 class DrawableObject {
 public:
-//	DataPool* poolinstance;
+	void * poolinstance;
 // PhysicalObj;
 	plClusterGroup* ClusterGroup;
 	bool isCluster;

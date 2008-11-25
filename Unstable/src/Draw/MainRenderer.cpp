@@ -107,7 +107,7 @@ void MainRenderer::renderSpanMesh(hsTArray<plGBufferVertex> verts, hsTArray<unsi
     }
 }
 
-void MainRenderer::SetLayerParams(plLayerInterface* layer, bool isWaveset) {
+unsigned int MainRenderer::SetLayerParams(plLayerInterface* layer, bool isWaveset) {
     if (layer->getTexture()) {
         if (layer->getTexture().isLoaded()) {
             int texID = getTextureIDFromKey(layer->getTexture());
@@ -153,21 +153,32 @@ void MainRenderer::SetLayerParams(plLayerInterface* layer, bool isWaveset) {
 
     glDisable(GL_BLEND);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
-    if ((layer->getState().fBlendFlags & hsGMatState::kBlendAlpha) != 0) {
+    if (layer->getState().fBlendFlags & hsGMatState::kBlendAlpha) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     }
-    if ((layer->getState().fBlendFlags & hsGMatState::kBlendAdd) != 0) {
+    if (layer->getState().fBlendFlags & hsGMatState::kBlendAdd) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     }
-    if ((layer->getState().fBlendFlags & hsGMatState::kBlendNoTexColor) != 0) {
+	if (layer->getState().fBlendFlags & hsGMatState::kBlendMult) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE_MINUS_SRC_COLOR,GL_SRC_COLOR);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    }
+//	if (layer->getState().fBlendFlags & 0x00024002) {
+//		glEnable(GL_BLEND);
+//		glBlendFunc(GL_DST_COLOR,GL_ZERO);
+//		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+//	}
+    if (layer->getState().fBlendFlags & hsGMatState::kBlendNoTexColor) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
     }
+	return layer->getState().fMiscFlags;
 }
 
 void MainRenderer::VFM_Spherical(float *cam, float *worldPos) {
@@ -220,7 +231,7 @@ void MainRenderer::UpdateList(bool wireframe) {
 
 void MainRenderer::draw() {
     glPushMatrix();
-//    pool->SortDrawableList();
+    pool->SortDrawableList();
 	
     for (size_t i=0; i < pool->getDrawObjectSize(); i++) {
         DrawableObject *dObj = pool->getDrawObject(i);
