@@ -242,11 +242,10 @@ void DataPool::LoadTexturesToGL() {
     }
 }
 
-EngineMessage* DataPool::CreateMessage(unsigned int type) {
-	if (EngineMsgs.size() > 1000) return NULL;
-	EngineMessage* msg = new EngineMessage;
+unsigned int DataPool::RegisterMessage(EngineMessage* msg) {
+	if (EngineMsgs.size() > 1000) return kErrorMsgNumberLimit;
 	EngineMsgs.push_back(msg);
-	return msg;
+	return kAddedMsg;
 }
 
 void DataPool::DeleteMessage(EngineMessage* msg) {

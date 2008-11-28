@@ -113,10 +113,11 @@ void* MsgExeLoop(void* arg) {
 
 void testMsgCommand() {
 	pthread_mutex_lock(&mutex);
-	EngineMessage* msg = pool.CreateMessage(EngineMessage::kLinkMgrLoad);
+	EngineMessage* msg = new EngineMessage;
 	msg->MsgType = EngineMessage::kLinkMgrLoad;
 	msg->chars01 = (char*)StartUpPath;
 	msg->MsgUseage = EngineMessage::kLocalOneUse;
+	pool.RegisterMessage(msg);
 	pthread_mutex_unlock(&mutex);
 	printf("sent test msg\n");
 }

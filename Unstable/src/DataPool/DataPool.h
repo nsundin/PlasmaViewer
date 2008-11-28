@@ -36,7 +36,7 @@ public:
 	size_t getNumMsgs();
 	void DeleteMessageByInd(int i);
 	EngineMessage* getMessage(int i);
-	EngineMessage* CreateMessage(unsigned int type);
+	unsigned int RegisterMessage(EngineMessage* msg);
 	void DeleteMessage(EngineMessage* msg);
 	Player* activePlayer;
 	pthread_mutex_t * mutex;
