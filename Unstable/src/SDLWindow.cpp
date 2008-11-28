@@ -60,12 +60,18 @@ void SDLWindow::resize() {
 void SDLWindow::GLDraw(MainRenderer* renderer) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
+
+//	glViewport(0, 0, window_w, window_h);
+//    glMatrixMode(GL_PROJECTION);
+//    glLoadIdentity();
+//    gluOrtho2D(0.0, (double)window_w, 0.0,(double)window_h);
+
+//    glColor3f(0.27f,0.46f,0.33f);
+
+//    glRectf(10, 67.0f, 100, 52.0f);
+
 	renderer->draw();
-
-	pthread_mutex_lock(pool->mutex);
 	pool->getCurrentCamera()->update();
-	pthread_mutex_unlock(pool->mutex);
-
 	SDL_GL_SwapBuffers();
 }
 void SDLWindow::quit(int code) {

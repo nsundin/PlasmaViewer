@@ -6,6 +6,8 @@
 #include "PlasmaDefs.h"
 #include "../DataPool/DataPool.h"
 
+void PrintProgress(float progresspercent);
+
 class LinkManager {
 public:
 	DataPool* pool;

@@ -17,6 +17,7 @@
 class MainRenderer {
 public:
 	DataPool* pool;
+	void LoadTexturesToGL();
 	void SetCamera(Camera* cam);
 
 	void VFM_Spherical(float *cam, float *worldPos);

@@ -211,10 +211,12 @@ void MainRenderer::VFM_Spherical(float *cam, float *worldPos) {
 
 }
 
+
 void MainRenderer::UpdateList(bool wireframe) {
-    printf("Renderlist Update\n");
+//    printf("Renderlist Update\n");
+	pool->LoadTexturesToGL();
     int count = 0;
-    if(gl_rendercount)
+    if (gl_rendercount)
         glDeleteLists(gl_renderlist, gl_rendercount);
 
     gl_rendercount = pool->getDrawObjectSize();
@@ -226,16 +228,16 @@ void MainRenderer::UpdateList(bool wireframe) {
         glEndList();
         count++;
     }
-    printf("Regenerated %d items\n", count);
+//    printf("Regenerated %d items\n", count);
 }
 
 void MainRenderer::draw() {
     glPushMatrix();
     pool->SortDrawableList();
-	
     for (size_t i=0; i < pool->getDrawObjectSize(); i++) {
         DrawableObject *dObj = pool->getDrawObject(i);
-        if (dObj->isCluster) {
+		if (dObj->RenderIndex == 0xBAADF00D) continue;
+		if (dObj->isCluster) {
             for (size_t clusteridx = 0; clusteridx < dObj->ClusterGroup->getNumClusters(); clusteridx++) {
                 plCluster* c = dObj->ClusterGroup->getCluster(clusteridx);
                 for(size_t inst = 0; inst < c->getNumInstances(); inst++) {
@@ -263,6 +265,7 @@ void MainRenderer::draw() {
                     }
                 }
             }
+//			printf("%i\n",dObj->RenderIndex);
             glCallList(gl_renderlist+dObj->RenderIndex);
             glPopMatrix();
         }

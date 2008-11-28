@@ -191,6 +191,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\DataPool\DrawableObject.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\DataPool\DrawableObject.h"
 				>
 			</File>
@@ -228,6 +232,26 @@
 			</File>
 			<File
 				RelativePath="..\src\Control\LinkManager.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Msg"
+			>
+			<File
+				RelativePath="..\src\Msg\EngineMessage.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Msg\EngineMessage.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Msg\MessageExecuter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Msg\MessageExecuter.h"
 				>
 			</File>
 		</Filter>

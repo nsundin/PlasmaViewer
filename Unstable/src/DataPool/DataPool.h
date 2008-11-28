@@ -20,6 +20,7 @@
 
 #include "DrawableObject.h"
 #include "TextureObject.h"
+#include "../Msg/EngineMessage.h"
 #include "player.h"
 #include "camera.h"
 
@@ -27,6 +28,16 @@ bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs);
 
 class DataPool {
 public:
+	enum MsgCode {
+		kErrorMsgNumberLimit,
+		kAddedMsg,
+	};
+	void LoadTexturesToGL();
+	size_t getNumMsgs();
+	void DeleteMessageByInd(int i);
+	EngineMessage* getMessage(int i);
+	EngineMessage* CreateMessage(unsigned int type);
+	void DeleteMessage(EngineMessage* msg);
 	Player* activePlayer;
 	pthread_mutex_t * mutex;
 	void SortDrawableList();
@@ -37,7 +48,6 @@ public:
 	void AppendClusterGroupToDrawList(plKey clustergroupkey);
 	void AppendClustersToDrawList(std::vector<plKey> clusters);
 	void AppendSceneObjectsToDrawList(std::vector<plKey> SObjects);
-//	void SortDrawableList();
 	void PrintObjects();
 	TextureObject* getTextureObject(size_t ind);
 	plKey getSceneObject(size_t ind);
@@ -51,6 +61,7 @@ public:
 	void SetCurrentCamera(Camera* cam);
 private:
 	Camera* CurrentCamera;
+	std::vector<EngineMessage*> EngineMsgs;
 	std::vector<Camera*> Cameras;
 	std::vector<Player*> Players;
 	std::vector<plKey> AllLoadedSceneObjects;

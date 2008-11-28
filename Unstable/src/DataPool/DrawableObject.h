@@ -11,6 +11,8 @@
 
 class DrawableObject {
 public:
+	DrawableObject();
+	~DrawableObject();
 	void * poolinstance;
 // PhysicalObj;
 	plClusterGroup* ClusterGroup;
@@ -18,6 +20,7 @@ public:
 
 	bool isAnimPlaying;
 	bool hasCI;
+	bool hasBeenDrawListed;
 	hsMatrix44 CIMat;
 	plKey Owner;
 	plKey SpanKey;

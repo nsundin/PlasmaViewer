@@ -26,9 +26,7 @@ void DataPool::SetCurrentCamera(Camera* cam) {
 }
 
 void DataPool::SortDrawableList() {
-	pthread_mutex_lock(mutex);
     std::stable_sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
-	pthread_mutex_unlock(mutex);
 }
 
 void DataPool::AppendClusterGroupToDrawList(plKey clustergroupkey) {
@@ -220,26 +218,59 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
 }
 
 void DataPool::LoadTextures(std::vector<plKey> Textures) {
-    ///Warning, until a problem with the texture-class list is fixed do not run this more than once (for fear of mem-leak)
-    if (gl_texlist != NULL)
-        delete[] gl_texlist;
-
-
-    gl_texlist = new GLuint[Textures.size()];
-    glGenTextures(Textures.size(), gl_texlist);
     for (size_t i=0; i < Textures.size(); i++) {
         TextureObject* tex = new TextureObject;
         tex->key = Textures[i];
-        if (loadHeadSpinMipmapTexture(Textures[i],gl_texlist[i])) {
-            tex->textureInd = gl_texlist[i];
-        }
-        else {
-            tex->textureInd = -1;
-        }
+		tex->textureInd = -1;
         TextureList.push_back(tex);
     }
 }
 
+void DataPool::LoadTexturesToGL() {
+    if (gl_texlist != NULL)
+        delete[] gl_texlist;
+
+    gl_texlist = new GLuint[TextureList.size()];
+    glGenTextures(TextureList.size(), gl_texlist);
+    for (size_t i=0; i < TextureList.size(); i++) {
+        if (loadHeadSpinMipmapTexture(TextureList[i]->key, gl_texlist[i])) {
+            TextureList[i]->textureInd = gl_texlist[i];
+        }
+        else {
+            TextureList[i]->textureInd = -1;
+        }
+    }
+}
+
+EngineMessage* DataPool::CreateMessage(unsigned int type) {
+	if (EngineMsgs.size() > 1000) return NULL;
+	EngineMessage* msg = new EngineMessage;
+	EngineMsgs.push_back(msg);
+	return msg;
+}
+
+void DataPool::DeleteMessage(EngineMessage* msg) {
+	for (size_t i=0; i < EngineMsgs.size(); i++) {
+		if (EngineMsgs[i] == msg) {
+			delete[] EngineMsgs[i];
+			EngineMsgs.erase(EngineMsgs.begin()+i);
+			return;
+		}
+	}
+}
+
+void DataPool::DeleteMessageByInd(int i) {
+	delete EngineMsgs[i];
+	EngineMsgs.erase(EngineMsgs.begin()+i);
+}
+
+EngineMessage* DataPool::getMessage(int i) {
+	return EngineMsgs[i];
+}
+
+size_t DataPool::getNumMsgs() {
+	return EngineMsgs.size();
+}
 
 //bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
 //    if(lhs->renderlevel < rhs->renderlevel) return true;

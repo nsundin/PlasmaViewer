@@ -1,5 +1,21 @@
 #include "LinkManager.h"
 
+void PrintProgress(float progresspercent) {
+	int bar_width = 30;
+	printf("\r[");
+	for (size_t i=0; i<(int)(bar_width*progresspercent); i++) {
+		printf("=");
+	}
+	for (size_t i=0; i<bar_width-(int)(bar_width*progresspercent); i++) {
+		printf(" ");
+	}
+	printf("] %1.2f%%",progresspercent*100);
+	if (1.0f <= progresspercent) {
+		printf("\n");
+	}
+}
+
+
 void LinkManager::LoadLocation(const plLocation &loc) {
     pool->LoadTextures(rm->getKeys(loc, kMipmap));
     pool->AppendSceneObjectsToDrawList(rm->getKeys(loc, kSceneObject));
@@ -18,9 +34,7 @@ int LinkManager::Load(const char* filename) {
             path = path + PATHSEP;
 
         if (age->getNumPages() > 0) {
-            plString file = plString::Format("%s_District_%s.prp",
-                    age->getAgeName().cstr(),
-                    age->getPage(0).fName.cstr());
+            plString file = plString::Format("%s_District_%s.prp", age->getAgeName().cstr(), age->getPage(0).fName.cstr());
             FILE* F = fopen((path + file).cstr(), "rb");
             if (F == NULL) {
                 rm->setVer(pvEoa, true);
@@ -29,18 +43,18 @@ int LinkManager::Load(const char* filename) {
                 fclose(F);
             }
         }
-        int num_total_pages = age->getNumPages();
-//        drawLoading(0.0, 0.0);
-//		ProgressCallback old = rm->SetProgressFunc(&drawSecondaryProgress);
+
+		ProgressCallback old = rm->SetProgressFunc(&PrintProgress);
+
         for (size_t i=0; i<age->getNumPages(); i++) {
+			printf("\nLoading %s\n\n",age->getPageFilename(i, rm->getVer()).cstr());
             rm->ReadPage(path + age->getPageFilename(i, rm->getVer()));
-            float completed = ((float)i+1.0f)/(float)num_total_pages;
-//            drawLoading(completed, 0.0);
         }
         for (size_t i=0; i<age->getNumCommonPages(rm->getVer()); i++) {
             rm->ReadPage(path + age->getCommonPageFilename(i, rm->getVer()));
         }
-//        rm->SetProgressFunc(old);
+		printf("\n");
+        rm->SetProgressFunc(old);
         //end of page-reading
 
         for (size_t i1 = 0; i1 < age->getNumPages(); i1++) {
@@ -72,3 +86,6 @@ int LinkManager::Load(const char* filename) {
 //    rm->UnloadAge(agename);
 //    printf("%s unloaded. %i locations loaded\n",agename.cstr(),	rm->getLocations().size());
 //}
+//            float completed = ((float)i+1.0f)/(float)age->getNumPages();
+//            drawLoading(completed, 0.0);
+//        drawLoading(0.0, 0.0);
