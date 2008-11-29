@@ -215,6 +215,14 @@
 			Name="Draw"
 			>
 			<File
+				RelativePath="..\src\Draw\DynText.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Draw\DynText.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\Draw\MainRenderer.cpp"
 				>
 			</File>
@@ -261,6 +269,14 @@
 		</File>
 		<File
 			RelativePath="..\src\maths.h"
+			>
+		</File>
+		<File
+			RelativePath="..\src\PlayerConsole.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\src\PlayerConsole.h"
 			>
 		</File>
 		<File

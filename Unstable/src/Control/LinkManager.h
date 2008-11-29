@@ -4,6 +4,7 @@
 #include "ResManager/plResManager.h"
 #include "ResManager/plAgeInfo.h"
 #include "PlasmaDefs.h"
+#include "Debug/plDebug.h"
 #include "../DataPool/DataPool.h"
 
 void PrintProgress(float progresspercent);

@@ -6,12 +6,13 @@
 #include "DataPool/DataPool.h"
 #include "Draw/MainRenderer.h"
 #include "SDLWindow.h"
+#include "PlasmaDefs.h"
 #include "ResManager/plResManager.h"
 #include "Control/LinkManager.h"
 #include "Msg/MessageExecuter.h"
 
-
-#define MSG_EXECUTER_RATE 10
+#define FRAME_WAIT         20 //no I didn't mean frame-rate ;)
+#define MSG_EXECUTER_RATE  20
 
 bool isRendering = false;
 bool isUpdate = false;
@@ -27,8 +28,8 @@ MessageExecuter msgexe;
 pthread_t callThd[2];
 pthread_mutex_t mutex;
 
-//const char* StartUpPath = "C:\\Personal_District_psnlMYSTII.prp";
-const char* StartUpPath = "C:\\trebivdil.age";
+//const char* StartUpPath = "C:\\Program Files\\CyanWorlds\\UruCC\\dat\\city.age";
+const char* StartUpPath = "C:\\Kveer.age";
 
 
 void MotionHandler(Uint32 TimeFactor) {
@@ -66,12 +67,7 @@ void* SDLFunc(void* arg) {
 
 	window.init_SDL();
 	window.GL_init();
-	cam->warp(0.0f,0.0f,15.0f);
-
-//	window.GLDraw(&renderer);
-//	cam->turn();
-//	printf("initLoop\n");
-	renderer.UpdateList(false);
+//	cam->warp(0.0f,0.0f,15.0f);
 	while (1) {
 		pthread_mutex_lock(&mutex);
 		now_time = SDL_GetTicks();
@@ -79,6 +75,7 @@ void* SDLFunc(void* arg) {
 		last_time = now_time;
 		if (isUpdate) {
 			renderer.UpdateList(false);
+			cam->turn();
 			isUpdate = false;
 		}
 		if (isRendering) {
@@ -87,7 +84,7 @@ void* SDLFunc(void* arg) {
 			window.ProcessEvents();
 		}
 		pthread_mutex_unlock(&mutex);
-		SDL_Delay(20);
+		SDL_Delay(FRAME_WAIT);
 	}
 	pthread_exit(0);
 	return 0;
@@ -131,21 +128,21 @@ void printNumMessagesCommand() {
 void startRendering() {
 	pthread_mutex_lock(&mutex);
 	isRendering = true;
-	printf("\Rendering started\n");
+	printf("\nRendering started\n");
 	pthread_mutex_unlock(&mutex);
 }
 
 void endRendering() {
 	pthread_mutex_lock(&mutex);
 	isRendering = false;
-	printf("\Rendering ended\n");
+	printf("\nRendering ended\n");
 	pthread_mutex_unlock(&mutex);
 }
 
 void updateRendering() {
 	pthread_mutex_lock(&mutex);
 	isUpdate = true;
-	printf("\Rendering updating\n");
+	printf("\nRendering updating\n");
 	pthread_mutex_unlock(&mutex);
 }
 
@@ -156,6 +153,8 @@ int main(int argc, char** argv) {
 	}
 	pthread_mutex_init(&mutex, NULL);
 
+	plString fontpath =  (plString(argv[0]).beforeLast(PATHSEP)+PATHSEP)+plString("FreeMono.ttf");
+	window.initConsole(fontpath.cstr());
 	msgexe.lnkmgr = &lnkmgr;
 	msgexe.renderer = &renderer;
 	pool.mutex = &mutex;
@@ -169,6 +168,11 @@ int main(int argc, char** argv) {
 		return 0;
 	if (pthread_create(&callThd[1], NULL, MsgExeLoop, NULL))
 		return 0;
+
+	//do init thing (send load message start engine etc.)
+	testMsgCommand();
+	updateRendering();
+	startRendering();
 	//maybe this could be a Python command-prompt
 	while (1) {
 		std::string command;
@@ -194,6 +198,11 @@ int main(int argc, char** argv) {
 			testMsgCommand();
 			updateRendering();
 			startRendering();
+		}
+		else if (command == (std::string)"warp") {
+			pthread_mutex_lock(&mutex);
+			cam->warp(111.0f,22.0f,47.0f);
+			pthread_mutex_unlock(&mutex);
 		}
 		else {
 			printf("No command '%s'\n",command.c_str());

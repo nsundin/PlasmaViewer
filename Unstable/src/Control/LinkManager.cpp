@@ -24,6 +24,7 @@ void LinkManager::LoadLocation(const plLocation &loc) {
 }
 
 int LinkManager::Load(const char* filename) {
+	plDebug::Init(plDebug::kDLNone);
     printf("Loading Scene... use arrow keys to move around and Z and X to move up and down\n\n");
     if (plString(filename).afterLast('.') == "age") {
         plAgeInfo* age = rm->ReadAge(filename, false);
@@ -44,7 +45,7 @@ int LinkManager::Load(const char* filename) {
             }
         }
 
-		ProgressCallback old = rm->SetProgressFunc(&PrintProgress);
+//		ProgressCallback old = rm->SetProgressFunc(&PrintProgress);
 
         for (size_t i=0; i<age->getNumPages(); i++) {
 			printf("\nLoading %s\n\n",age->getPageFilename(i, rm->getVer()).cstr());
@@ -54,7 +55,7 @@ int LinkManager::Load(const char* filename) {
             rm->ReadPage(path + age->getCommonPageFilename(i, rm->getVer()));
         }
 		printf("\n");
-        rm->SetProgressFunc(old);
+//        rm->SetProgressFunc(old);
         //end of page-reading
 
         for (size_t i1 = 0; i1 < age->getNumPages(); i1++) {

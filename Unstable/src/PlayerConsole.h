@@ -9,7 +9,7 @@
 
 #include <SDL/SDL_opengl.h>
 
-#include "DynText.h"
+#include "Draw/DynText.h"
 
 
 class PlayerConsole {

@@ -3,11 +3,15 @@
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
+#include "PlayerConsole.h"
 #include "Draw/MainRenderer.h"
 
 class SDLWindow {
 public:
 	DataPool* pool;
+	void initConsole(const char* fontpath);
+	void startGUI();
+	void endGUI();
 	void KeyCallback(SDL_keysym* keysym,unsigned int type);
 	void KeyDownTrue(bool* var, unsigned press_type);
 	SDLWindow(DataPool* pool);
@@ -25,6 +29,7 @@ public:
 	int window_h;
 
 private:
+	PlayerConsole pconsole;
 	int window_bpp;
 	int window_flags;
 	bool isFullScreen;

@@ -50,6 +50,12 @@ void SDLWindow::init_SDL() {
 	resize();
 }
 
+void SDLWindow::initConsole(const char* fontpath) {
+//    printf("FONT!|%s|\n",fontpath);
+    pconsole.texthandler = new DynText(fontpath,18,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
+	pconsole.isHighlighted = false;
+}
+
 void SDLWindow::resize() {
     glViewport(0, 0, window_w, window_h);
     glMatrixMode(GL_PROJECTION);
@@ -57,21 +63,36 @@ void SDLWindow::resize() {
     gluPerspective(80.0f, (double)window_w / (double)window_h, 1.0f, 100000.0f);
 }
 
+void SDLWindow::startGUI() {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0,window_w, 0, window_h);
+    glScalef(1, -1, 1);
+    glTranslatef(0, -window_h, 0);
+    glMatrixMode(GL_MODELVIEW);
+}
+
+
+void SDLWindow::endGUI() {
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
+
 void SDLWindow::GLDraw(MainRenderer* renderer) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
-
-//	glViewport(0, 0, window_w, window_h);
-//    glMatrixMode(GL_PROJECTION);
-//    glLoadIdentity();
-//    gluOrtho2D(0.0, (double)window_w, 0.0,(double)window_h);
-
-//    glColor3f(0.27f,0.46f,0.33f);
-
-//    glRectf(10, 67.0f, 100, 52.0f);
-
 	renderer->draw();
 	pool->getCurrentCamera()->update();
+
+	glPushMatrix();
+    startGUI();
+    glLoadIdentity();
+    pconsole.draw(window_w,window_h);
+	endGUI();
+	glPopMatrix();
+
 	SDL_GL_SwapBuffers();
 }
 void SDLWindow::quit(int code) {
@@ -89,10 +110,10 @@ void SDLWindow::KeyDownTrue(bool* var, unsigned press_type) {
 
 void SDLWindow::KeyCallback(SDL_keysym* keysym,unsigned int type) {
     switch(keysym->sym) {
-//        case SDLK_ESCAPE:
-//            if (type == SDL_KEYDOWN)
-//                plasmaconsole.escape();
-//            break;
+        case SDLK_ESCAPE:
+            if (type == SDL_KEYDOWN)
+                pconsole.escape();
+            break;
  //Player Control Keys
         case SDLK_LEFT:
 			KeyDownTrue(&pool->activePlayer->isTurningLeft,type);
@@ -113,10 +134,12 @@ void SDLWindow::KeyCallback(SDL_keysym* keysym,unsigned int type) {
             KeyDownTrue(&pool->activePlayer->isRun,type);
             break;
         case SDLK_x:
-			KeyDownTrue(&pool->activePlayer->isMovingDown,type);
+            if (!pconsole.isHighlighted)
+				KeyDownTrue(&pool->activePlayer->isMovingDown,type);
             break;
         case SDLK_z:
-			KeyDownTrue(&pool->activePlayer->isMovingUp,type);
+			if (!pconsole.isHighlighted)
+				KeyDownTrue(&pool->activePlayer->isMovingUp,type);
             break;
         default:
             break;
@@ -126,9 +149,28 @@ void SDLWindow::KeyCallback(SDL_keysym* keysym,unsigned int type) {
 void SDLWindow::ProcessEvents() {
     SDL_Event event;
     while(SDL_PollEvent(&event)) {
-        if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+		if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
             KeyCallback(&event.key.keysym,event.type);
-		}
+            if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_BACKSPACE) pconsole.backSpace();
+                if (event.key.keysym.sym == SDLK_RETURN) {
+                    if (pconsole.isTextInTypeBuffer()) {
+                        pconsole.isHighlighted = false;
+//                        ProcessConsoleCommand(pconsole.enter().c_str());
+                    }
+                }
+                if (event.key.keysym.sym > 31 && event.key.keysym.sym < 159) {
+                    if (pconsole.isHighlighted == false && event.key.keysym.sym != SDLK_x && event.key.keysym.sym != SDLK_z) {
+                        pool->activePlayer->SetStill();
+                        pconsole.isHighlighted = true;
+                    }
+                    if (pconsole.isHighlighted) {
+                        pconsole.addCharToTypeBuffer(char(event.key.keysym.unicode));
+                    }
+                }
+            }
+            break;
+        }
         else if (event.type == SDL_VIDEORESIZE && event.resize.w > 0 && event.resize.h > 0) {
             window_w = event.resize.w;
             window_h = event.resize.h;
