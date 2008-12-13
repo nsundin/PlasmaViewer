@@ -6,9 +6,13 @@
 #include "PlayerConsole.h"
 #include "Draw/MainRenderer.h"
 
+void UpdateProgressBar(float progresspercent);
+
 class SDLWindow {
 public:
+	bool isLoadingScreen;
 	DataPool* pool;
+	void drawLoading();
 	void initConsole(const char* fontpath);
 	void startGUI();
 	void endGUI();

@@ -250,16 +250,16 @@ void MainRenderer::draw() {
         }
         else {
             glPushMatrix();
-            if (dObj->hasCI) {
-                glMultMatrixf(getMatrixFrom_hsMatrix44(pool->getDrawObject(i)->CIMat));
+            if (dObj->ObjOwner->usesMatrix) {
+                glMultMatrixf(getMatrixFrom_hsMatrix44(pool->getDrawObject(i)->ObjOwner->ObjectMatrix));
             }
             if(dObj->vfm) {
                 if(dObj->vfm->getFlag(plViewFaceModifier::kFaceCam)) {
-                    if(dObj->hasCI) {
+                    if(dObj->ObjOwner->usesMatrix) {
                         float camV[3], objV[3];
                         for(int i = 0; i < 3; i++) {
                             camV[i] = pool->getCurrentCamera()->getCamPos(i);
-                            objV[i] = dObj->CIMat(i,3);
+                            objV[i] = dObj->ObjOwner->ObjectMatrix(i,3);
                         }
                         VFM_Spherical(camV, objV);
                     }
@@ -276,9 +276,9 @@ void MainRenderer::draw() {
 int MainRenderer::getTextureIDFromKey(plKey in_key) {
     for (size_t imageidx = 0; imageidx < pool->getTextureObjectSize(); imageidx++) {
         if (pool->getTextureObject(imageidx)->key->getName() == in_key->getName()) {
-
             return pool->getTextureObject(imageidx)->textureInd;
         }
     }
     return -1;
 }
+

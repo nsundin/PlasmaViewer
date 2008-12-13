@@ -14,12 +14,15 @@
 #include "PRP/Surface/plLayer.h"
 #include "PRP/Surface/plMipmap.h"
 #include "PRP/Object/plCoordinateInterface.h"
+#include "PRP/Object/plSimulationInterface.h"
 #include "PRP/Geometry/plClusterGroup.h"
 #include "PRP/Geometry/plCluster.h"
 #include "PRP/Geometry/plSpanTemplate.h"
 
 #include "DrawableObject.h"
 #include "TextureObject.h"
+#include "EngineObject.h"
+#include "PhysicalObject.h"
 #include "../Msg/EngineMessage.h"
 #include "player.h"
 #include "camera.h"
@@ -32,6 +35,10 @@ public:
 		kErrorMsgNumberLimit,
 		kAddedMsg,
 	};
+	hsMatrix44 getLinkInPointMatrix(); //will return origin can't find linkinpointdefault in current objects
+	int loadHeadSpinMipmapTexture(plKey mipmapkey,int texname);
+	void DeletePhysicalObject(PhysicalObject* obj);
+	void AddPhysicalObject(PhysicalObject* obj);
 	void LoadTexturesToGL();
 	size_t getNumMsgs();
 	void DeleteMessageByInd(int i);
@@ -41,16 +48,8 @@ public:
 	Player* activePlayer;
 	pthread_mutex_t * mutex;
 	void SortDrawableList();
-	void LoadTextures(std::vector<plKey> Textures);
-	int loadHeadSpinMipmapTexture(plKey mipmapkey,int texname);
-	void AppendSceneObjectsToList(std::vector<plKey> SObjects);
-	void AppendSceneObjectToDrawList(plKey sobjectkey);
-	void AppendClusterGroupToDrawList(plKey clustergroupkey);
-	void AppendClustersToDrawList(std::vector<plKey> clusters);
-	void AppendSceneObjectsToDrawList(std::vector<plKey> SObjects);
 	void PrintObjects();
 	TextureObject* getTextureObject(size_t ind);
-	plKey getSceneObject(size_t ind);
 	DrawableObject* getDrawObject(size_t ind);
 	size_t getDrawObjectSize();
 	size_t getTextureObjectSize();
@@ -59,14 +58,16 @@ public:
 	Camera* createCamera();
 	Camera* getCurrentCamera();
 	void SetCurrentCamera(Camera* cam);
+
+    std::vector<TextureObject*> TextureList;
+    std::vector<DrawableObject*> DrawableList;
+    std::vector<PhysicalObject*> PhysicalObjects;
+    std::vector<EngineObject*> EngineObjects;
 private:
 	Camera* CurrentCamera;
 	std::vector<EngineMessage*> EngineMsgs;
 	std::vector<Camera*> Cameras;
 	std::vector<Player*> Players;
-	std::vector<plKey> AllLoadedSceneObjects;
-    std::vector<TextureObject*> TextureList;
-    std::vector<DrawableObject*> DrawableList;
     GLint gl_renderlist;
     GLint gl_rendercount;
     GLuint* gl_texlist;

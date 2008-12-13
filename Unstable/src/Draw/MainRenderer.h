@@ -31,7 +31,6 @@ public:
     GLint gl_renderlist;
     GLint gl_rendercount;
     GLuint* gl_texlist;
-
 };
 
 #endif

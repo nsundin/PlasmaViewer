@@ -5,17 +5,33 @@ bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
     else if(lhs->renderlevel > rhs->renderlevel) return false;
     else if(lhs->spanflags < rhs->spanflags) return true;
     else if(lhs->spanflags > rhs->spanflags) return false;
-    else if(lhs->hasCI && rhs->hasCI) {
+    else if(lhs->ObjOwner->usesMatrix && rhs->ObjOwner->usesMatrix) {
 		DataPool* poolinst = (DataPool*)lhs->poolinstance;
-        float a1 = lhs->CIMat(0,3) - poolinst->getCurrentCamera()->getCamPos(0);
-        float b1 = lhs->CIMat(1,3) - poolinst->getCurrentCamera()->getCamPos(1);
-        float c1 = lhs->CIMat(2,3) - poolinst->getCurrentCamera()->getCamPos(2);
-        float a2 = rhs->CIMat(0,3) - poolinst->getCurrentCamera()->getCamPos(0);
-        float b2 = rhs->CIMat(1,3) - poolinst->getCurrentCamera()->getCamPos(1);
-        float c2 = rhs->CIMat(2,3) - poolinst->getCurrentCamera()->getCamPos(2);
+        float a1 = lhs->ObjOwner->ObjectMatrix(0,3) - poolinst->getCurrentCamera()->getCamPos(0);
+        float b1 = lhs->ObjOwner->ObjectMatrix(1,3) - poolinst->getCurrentCamera()->getCamPos(1);
+        float c1 = lhs->ObjOwner->ObjectMatrix(2,3) - poolinst->getCurrentCamera()->getCamPos(2);
+        float a2 = lhs->ObjOwner->ObjectMatrix(0,3) - poolinst->getCurrentCamera()->getCamPos(0);
+        float b2 = lhs->ObjOwner->ObjectMatrix(1,3) - poolinst->getCurrentCamera()->getCamPos(1);
+        float c2 = lhs->ObjOwner->ObjectMatrix(2,3) - poolinst->getCurrentCamera()->getCamPos(2);
         return (a1*a1+b1*b1+c1*c1) > (a2*a2+b2*b2+c2*c2);
     }
     return false;
+}
+
+hsMatrix44 DataPool::getLinkInPointMatrix() {
+	for (size_t i = 0; i < EngineObjects.size(); ++i) {
+		if (EngineObjects[i]->ObjectName == "LinkInPointDefault" && EngineObjects[i]->usesMatrix) 
+			return EngineObjects[i]->ObjectMatrix;
+	}
+	for (size_t i = 0; i < EngineObjects.size(); ++i) {
+		plSceneObject* so = plSceneObject::Convert(EngineObjects[i]->PlasmaKey->getObj());
+		for (size_t modi = 0; modi < so->getNumModifiers(); ++modi) {
+			if (so->getModifier(modi)->getType() == kSpawnModifier) {
+				return EngineObjects[i]->ObjectMatrix;
+			}
+		}
+	}
+	return hsMatrix44::Identity();
 }
 
 Camera* DataPool::getCurrentCamera() {
@@ -29,98 +45,16 @@ void DataPool::SortDrawableList() {
     std::stable_sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
 }
 
-void DataPool::AppendClusterGroupToDrawList(plKey clustergroupkey) {
-    DrawableObject* dObj = new DrawableObject;
-	dObj->poolinstance = this;
-    plClusterGroup* cluster = plClusterGroup::Convert(clustergroupkey->getObj());
-    dObj->isCluster = true;
-    dObj->ClusterGroup = cluster;
-    dObj->renderlevel = cluster->getRenderLevel();
-    dObj->Owner = clustergroupkey;
-    DrawableList.push_back(dObj);
-//    SortDrawableList();
-}
-
-void DataPool::AppendSceneObjectToDrawList(plKey sobjectkey) {
-    plSceneObject* obj = plSceneObject::Convert(sobjectkey->getObj());
-    if (obj->getDrawInterface().Exists()) {
-        plDrawInterface* draw = plDrawInterface::Convert(obj->getDrawInterface()->getObj());
-        if(!draw) return;
-
-        plCoordinateInterface* coord = NULL;
-        if (obj->getCoordInterface().Exists()) {
-            coord = plCoordinateInterface::Convert(obj->getCoordInterface()->getObj());
-        }
-        for (size_t i1=0; i1<draw->getNumDrawables(); i1++) {
-            if (draw->getDrawableKey(i1) == -1){
-                continue;
-            }
-            DrawableObject* dObj = new DrawableObject;
-			dObj->poolinstance = this;
-            if (coord == NULL) {
-                dObj->hasCI = false;
-            }
-            else {
-                dObj->hasCI = true;
-                dObj->CIMat = coord->getLocalToWorld();
-            }
-            dObj->DrawableKey = draw->getDrawableKey(i1);
-            dObj->SpanKey = draw->getDrawable(i1);
-            dObj->Owner = sobjectkey;
-            plDrawableSpans* span = plDrawableSpans::Convert(draw->getDrawable(i1)->getObj());
-            dObj->renderlevel = span->getRenderLevel();
-            dObj->spanflags = span->getProps();
-            dObj->draw = draw;
-            dObj->isCluster = false;
-            dObj->vfm = 0;
-            for(size_t i = 0; i < obj->getNumModifiers(); i++) {
-                plViewFaceModifier * vfm = plViewFaceModifier::Convert(obj->getModifier(i)->getObj());
-                if(vfm){
-                    dObj->vfm = vfm;
-                    break;
-                }
-            }
-            dObj->isAnimPlaying = true;
-            DrawableList.push_back(dObj);
-        }
-//        SortDrawableList();
-    }
-}
-
-void DataPool::AppendClustersToDrawList(std::vector<plKey> clusters) {
-    for (size_t i = 0; i < clusters.size(); i++) {
-        if (clusters[i].Exists()) {
-            AppendClusterGroupToDrawList(clusters[i]);
-            printf("ADDED CLUSTER: %s\n",clusters[i]->getName().cstr());
-        }
-    }
-}
-
-void DataPool::AppendSceneObjectsToDrawList(std::vector<plKey> SObjects) {
-    for (size_t i=0; i < SObjects.size(); i++) {
-        AppendSceneObjectToDrawList(SObjects[i]);
-    }
-}
-
-void DataPool::AppendSceneObjectsToList(std::vector<plKey> SObjects) {
-    for (size_t i=0; i < SObjects.size(); i++) {
-        AllLoadedSceneObjects.push_back(SObjects[i]);
-    }
-}
-
 void DataPool::PrintObjects() {
-    for (size_t i=0; i < DrawableList.size(); i++) {
-        DrawableObject *dObj = DrawableList[i];
-        printf("%d: %s\n", i, dObj->Owner->getName().cstr());
-    }
+//    for (size_t i=0; i < DrawableList.size(); i++) {
+//        DrawableObject *dObj = DrawableList[i];
+//        printf("%d: %s\n", i, dObj->PlasmaOwnerKey->getName().cstr());
+//    }
 }
 TextureObject* DataPool::getTextureObject(size_t ind) {
 	return TextureList[ind];
 }
 
-plKey DataPool::getSceneObject(size_t ind) {
-	return AllLoadedSceneObjects[ind];
-}
 
 DrawableObject* DataPool::getDrawObject(size_t ind) {
 	return DrawableList[ind];
@@ -217,15 +151,6 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
         return 0;
 }
 
-void DataPool::LoadTextures(std::vector<plKey> Textures) {
-    for (size_t i=0; i < Textures.size(); i++) {
-        TextureObject* tex = new TextureObject;
-        tex->key = Textures[i];
-		tex->textureInd = -1;
-        TextureList.push_back(tex);
-    }
-}
-
 void DataPool::LoadTexturesToGL() {
     if (gl_texlist != NULL)
         delete[] gl_texlist;
@@ -271,24 +196,16 @@ size_t DataPool::getNumMsgs() {
 	return EngineMsgs.size();
 }
 
-//bool SortDrawables(DrawableObject* lhs, DrawableObject* rhs) {
-//    if(lhs->renderlevel < rhs->renderlevel) return true;
-//    else if(lhs->renderlevel > rhs->renderlevel) return false;
-//    else if(lhs->spanflags < rhs->spanflags) return true;
-//    else if(lhs->spanflags > rhs->spanflags) return false;
-//    else
-//        if(lhs->hasCI && rhs->hasCI) {
-//        float a1 = lhs->CIMat(0,3) - cam.getCamPos(0);
-//        float b1 = lhs->CIMat(1,3) - cam.getCamPos(1);
-//        float c1 = lhs->CIMat(2,3) - cam.getCamPos(2);
-//        float a2 = rhs->CIMat(0,3) - cam.getCamPos(0);
-//        float b2 = rhs->CIMat(1,3) - cam.getCamPos(1);
-//        float c2 = rhs->CIMat(2,3) - cam.getCamPos(2);
-//        return (a1*a1+b1*b1+c1*c1) > (a2*a2+b2*b2+c2*c2);
-//    }
-//    return false;
-//}
-//
-//void DataPool::SortDrawableList() {
-//    std::stable_sort(DrawableList.begin(), DrawableList.end(), &SortDrawables);
-//}
+void DataPool::AddPhysicalObject(PhysicalObject* obj) {
+	PhysicalObjects.push_back(obj);
+}
+
+void DataPool::DeletePhysicalObject(PhysicalObject* obj) {
+	for (size_t i=0; i < PhysicalObjects.size(); i++) {
+		if (PhysicalObjects[i] == obj) {
+			delete[] PhysicalObjects[i];
+			PhysicalObjects.erase(PhysicalObjects.begin()+i);
+			return;
+		}
+	}
+}

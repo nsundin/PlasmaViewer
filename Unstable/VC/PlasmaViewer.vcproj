@@ -136,7 +136,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="OpenGL32.lib Plasma.lib glu32.lib sdl.lib sdlmain.lib sdl_ttf.lib pthreadVC2.lib"
+				AdditionalDependencies="OpenGL32.lib Plasma.lib glu32.lib sdl.lib sdlmain.lib sdl_ttf.lib pthreadVC2.lib ode_single.lib"
 				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\Owner\Desktop\Plasma_lib\Plasma\bin&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -197,6 +197,25 @@
 			<File
 				RelativePath="..\src\DataPool\DrawableObject.h"
 				>
+			</File>
+			<File
+				RelativePath="..\src\DataPool\EngineObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\DataPool\EngineObject.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\DataPool\PhysicalObject.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\DataPool\player.cpp"
@@ -261,6 +280,25 @@
 			<File
 				RelativePath="..\src\Msg\MessageExecuter.h"
 				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Physics"
+			>
+			<File
+				RelativePath="..\src\Physics\PhysicsEngine.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Physics\PhysicsEngine.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<File

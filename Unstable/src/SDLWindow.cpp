@@ -3,6 +3,13 @@
 #define defaultScreenX 800
 #define defaultScreenY 600
 
+float loaded,loaded2;
+
+void UpdateProgressBar(float progresspercent) {
+	loaded = progresspercent;
+}
+
+
 SDLWindow::SDLWindow(DataPool* pool) {
 	this->pool = pool;
 	info = NULL;
@@ -81,20 +88,64 @@ void SDLWindow::endGUI() {
 }
 
 void SDLWindow::GLDraw(MainRenderer* renderer) {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_DEPTH_TEST);
-	renderer->draw();
-	pool->getCurrentCamera()->update();
+	if (isLoadingScreen) {
+//		drawLoading();
+//		printf("drawload!\n");
+	}
+	else {
+		pthread_mutex_lock(pool->mutex);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		renderer->draw();
+		pool->getCurrentCamera()->update();
 
-	glPushMatrix();
-    startGUI();
-    glLoadIdentity();
-    pconsole.draw(window_w,window_h);
-	endGUI();
-	glPopMatrix();
-
+		glPushMatrix();
+		startGUI();
+		glLoadIdentity();
+		pconsole.draw(window_w,window_h);
+		endGUI();
+		glPopMatrix();
+		pthread_mutex_unlock(pool->mutex);
+	}
 	SDL_GL_SwapBuffers();
 }
+
+void SDLWindow::drawLoading() {
+    const float inset = 48.0f;
+    static float primary = 0.0, secondary = 0.0;
+    if(loaded >= 0.0) primary = loaded;
+    if(loaded2 >= 0.0) secondary = loaded2;
+//    printf("drawLoading: %f/%f\n",primary,secondary);
+    glViewport(0, 0, window_w, window_h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0.0, (double)window_w, 0.0,(double)window_h);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(0.27f,0.46f,0.33f);
+
+    float fullbarwidth = window_w-inset*2.0-4.0; //foobarwidth anyone?
+    float barwidth = fullbarwidth*primary;
+    float barwidth2 = fullbarwidth*secondary;
+
+    glRectf(inset+2.0f, 67.0f, inset+2.0+barwidth, 52.0f);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(inset,68.0f);
+    glVertex2f(window_w-inset-1.0,68.0f);
+    glVertex2f(window_w-inset-1.0,50.0f);
+    glVertex2f(inset,50.0f);
+    glEnd();
+    if(secondary > 0.0) {
+        glRectf(inset+2.0f, 97.0f, inset+2.0+barwidth2, 82.0f);
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(inset,98.0f);
+        glVertex2f(window_w-inset-1.0,98.0f);
+        glVertex2f(window_w-inset-1.0,80.0f);
+        glVertex2f(inset,80.0f);
+        glEnd();
+    }
+}
+
 void SDLWindow::quit(int code) {
     SDL_Quit();
 //	pthread_exit(0);
@@ -148,6 +199,7 @@ void SDLWindow::KeyCallback(SDL_keysym* keysym,unsigned int type) {
 
 void SDLWindow::ProcessEvents() {
     SDL_Event event;
+	pthread_mutex_lock(pool->mutex);
     while(SDL_PollEvent(&event)) {
 		if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
             KeyCallback(&event.key.keysym,event.type);
@@ -182,4 +234,5 @@ void SDLWindow::ProcessEvents() {
             break;
         }
     }
+	pthread_mutex_unlock(pool->mutex);
 }
