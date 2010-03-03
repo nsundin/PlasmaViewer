@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
 //        printf("usage: PlasmaGL prpname");
 //    }
 //    else {
-    plglClient* client = new plglClient("C:/Uru_CC/dat/Neighborhood.age");//argv[1]);
+        plglClient* client = new plglClient(argv[1]);
         client->doMain();
 //	}
     return 0;

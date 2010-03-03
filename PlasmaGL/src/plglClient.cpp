@@ -5,7 +5,7 @@
 
 
 
-plglClient::plglClient(char *startprp) {
+plglClient::plglClient(const char *startprp) {
     rm = new plResManager(pvPots);
     renderer = new plglRenderer(rm);
     game = new plglGame(rm);

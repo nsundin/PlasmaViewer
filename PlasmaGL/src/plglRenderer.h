@@ -1,8 +1,12 @@
 #ifndef PLGLRENDERER_H
 #define PLGLRENDERER_H
 
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glx.h>
+#include <GL/glext.h>
 #include <SDL.h>
-#include <SDL_opengl.h>
+//#include <SDL_opengl.h>
 #include "ResManager/plResManager.h"
 #include "PRP/Geometry/plDrawableSpans.h"
 #include "PRP/Surface/plMipmap.h"

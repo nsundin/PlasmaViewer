@@ -9,7 +9,7 @@
 
 class plglClient {
 public:
-    plglClient(char *startprp);
+    plglClient(const char *startprp);
     void doMain();
 private:
     void InitDisplay();
