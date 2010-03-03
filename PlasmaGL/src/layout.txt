@@ -1,0 +1,3 @@
+plglGame - takes care of things like logic and modifiers
+plglRender - renders
+plglClient - runs everything.  In the future this may spawn plglGame and plglRenderer as threads
