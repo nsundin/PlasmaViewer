@@ -2,7 +2,7 @@
 #define __PLGLCAMERA2_H__
 
 #include <math.h>
-#include <SDL_opengl.h>
+//#include <SDL_opengl.h>
 
 class plglCamera2 {
 public:

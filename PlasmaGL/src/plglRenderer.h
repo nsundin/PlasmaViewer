@@ -1,12 +1,19 @@
 #ifndef PLGLRENDERER_H
 #define PLGLRENDERER_H
 
+#include <SDL.h>
+
+#if WIN32;
+#include <SDL_opengl.h>
+#include <GL/wglext.h>
+#else;
+#include <GL/glext.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <GL/glext.h>
-#include <SDL.h>
-//#include <SDL_opengl.h>
+#endif;
+
+
 #include "ResManager/plResManager.h"
 #include "PRP/Geometry/plDrawableSpans.h"
 #include "PRP/Surface/plMipmap.h"

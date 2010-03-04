@@ -115,7 +115,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="C:\Users\User900\Desktop\Plasma_stuff\PlasmaGL\include;C:\Users\User900\Desktop\Plasma_stuff\PlasmaLib\core"
+				AdditionalIncludeDirectories="C:\Programming_Libraries\include;C:\Users\User900\Desktop\Plasma_stuff\HSPlasma\core"
 				PreprocessorDefinitions="WIN32"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -136,8 +136,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="OpenGL32.lib Plasma.lib glu32.lib sdl.lib sdlmain.lib"
-				AdditionalLibraryDirectories="C:\Users\User900\Desktop\Plasma_stuff\PlasmaGL\lib;C:\Users\User900\Desktop\Plasma_stuff\PlasmaLib\bin"
+				AdditionalDependencies="OpenGL32.lib HSPlasma.lib glu32.lib sdl.lib sdlmain.lib"
+				AdditionalLibraryDirectories="C:\Programming_Libraries\lib;C:\Users\User900\Desktop\Plasma_stuff\HSPlasma\bin"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"

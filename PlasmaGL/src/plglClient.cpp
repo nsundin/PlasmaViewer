@@ -5,13 +5,13 @@
 
 
 
-plglClient::plglClient(const char *startprp) {
+plglClient::plglClient(const char *startage) {
     rm = new plResManager(pvPots);
     renderer = new plglRenderer(rm);
     game = new plglGame(rm);
     InitDisplay();
     plDebug::Init(plDebug::kDLAll);
-    rm->ReadAge(startprp, true);
+    rm->ReadAge(startage, true);
     //rm->ReadPage(startprp);
     //rm->ReadPage("Personal_District_psnlMYSTII.prp");
     renderer->SetSpanKeys();

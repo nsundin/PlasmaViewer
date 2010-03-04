@@ -6,12 +6,12 @@
 #include "plglClient.h"
 //PlasmaGL
 int main(int argc, char** argv) {
-//    if (argc < 2) {
-//        printf("usage: PlasmaGL prpname");
-//    }
-//    else {
+    if (argc < 2) {
+        printf("usage: PlasmaGL agename");
+    }
+    else {
         plglClient* client = new plglClient(argv[1]);
         client->doMain();
-//	}
+	}
     return 0;
 }

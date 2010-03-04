@@ -1,4 +1,5 @@
 #include "plglCamera2.h"
+#include <SDL_opengl.h>
 
 const float RADS = 0.0174532925f;
 
