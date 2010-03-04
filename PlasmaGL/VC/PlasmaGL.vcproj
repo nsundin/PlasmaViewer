@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="C:\Programming_Libraries\include;C:\Users\User900\Desktop\Plasma_stuff\HSPlasma\core"
 				PreprocessorDefinitions="WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,7 +61,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="OpenGL32.lib Plasma.lib glu32.lib sdl.lib sdlmain.lib sdl_ttf.lib"
+				AdditionalDependencies="OpenGL32.lib HSPlasma.lib glu32.lib sdl.lib sdlmain.lib"
+				AdditionalLibraryDirectories="&quot;C:\Programming_Libraries\lib;C:\Users\User900\Desktop\Plasma_stuff\HSPlasma\bin-dbg&quot;"
 				GenerateDebugInformation="true"
 				EntryPointSymbol="mainCRTStartup"
 				TargetMachine="1"

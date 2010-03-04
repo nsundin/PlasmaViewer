@@ -5,7 +5,6 @@
 
 #if WIN32;
 #include <SDL_opengl.h>
-#include <GL/wglext.h>
 #else;
 #include <GL/glext.h>
 #include <GL/gl.h>
