@@ -224,10 +224,6 @@
 			RelativePath="..\src\plglSpawnPtMgr.h"
 			>
 		</File>
-		<File
-			RelativePath="..\src\plglUtils.cpp"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

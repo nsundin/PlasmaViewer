@@ -18,6 +18,7 @@
 #include "PRP/Surface/plMipmap.h"
 #include "PRP/Surface/plLayerInterface.h"
 #include "PRP/Surface/hsGMaterial.h"
+#include "PRP/Light/plOmniLightInfo.h"
 #include "PRP/KeyedObject/plKey.h"
 #include "Sys/hsColor.h"
 #include "Util/hsTArray.hpp"
@@ -37,6 +38,7 @@ typedef struct {
     size_t ind_start;
     size_t ind_offset;
     size_t ind_count;
+    hsTArray<plKey> lights;
 } spaninfo;
 
 public:
@@ -46,6 +48,7 @@ public:
     void SetSpanKeys();
     void SetUpAll();
     void RegisterTexture(plKey texture);
+    bool icanhaslightz;
 private:
     void SetUpSpan(plIcicle* span, plDrawableSpans* dspans);
     void RenderAll();

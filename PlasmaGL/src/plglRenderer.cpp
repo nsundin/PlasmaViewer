@@ -1,5 +1,4 @@
 #include "plglRenderer.h"
-#include "plglUtils.cpp"
 
 #ifdef WIN32
   #include <GL/wglext.h>
@@ -14,17 +13,18 @@ PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
 
 plglRenderer::plglRenderer(plResManager* rm){
     this->rm = rm;
-    //this should really be set per-object but should be fine until materials get set up
+    icanhaslightz = false;
 #ifdef WIN32
     glCompressedTexImage2DARB = (PFNGLCOMPRESSEDTEXIMAGE2DARBPROC)wglGetProcAddress("glCompressedTexImage2DARB");
 #else
     glCompressedTexImage2DARB = (PFNGLCOMPRESSEDTEXIMAGE2DARBPROC)glXGetProcAddress((const GLubyte*)"glCompressedTexImage2DARB");
 #endif
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
 }
 
 void plglRenderer::SetUpRenderer() {
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
     glViewport(0,0,(GLsizei)800,(GLsizei)600);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -34,9 +34,9 @@ void plglRenderer::SetUpRenderer() {
 
 }
 void plglRenderer::Render(plglCamera2 *camera) {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glShadeModel(GL_SMOOTH);
     glEnable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glPushMatrix();
     RenderAll();
@@ -117,7 +117,10 @@ void plglRenderer::SetUpSpan(plIcicle* span, plDrawableSpans* dspans) {
     newspaninfo.normalsoffset = normalsoffset;
     newspaninfo.uvoffset = buff->getStride()-((buff->getFormat() & plGBufferGroup::kUVCountMask)*sizeof(float)*3); //GIGANTIC HACK
         
+    //set up lights
+    newspaninfo.lights = span->getPermaLights();
 
+    //add the collected info to our list
     spaninfos[span] = newspaninfo;
 }
 
@@ -218,10 +221,37 @@ void plglRenderer::SetLayerParams(plLayerInterface* layer, bool isWaveset) {
 void plglRenderer::RenderSpan(plIcicle* span, plDrawableSpans* dspans) {
     spaninfo si = spaninfos[span];
     plGBufferGroup* buff = dspans->getBuffer(span->getGroupIdx());
+    //Set up and enable the lights
+    size_t num_lights = si.lights.getSize();
+    if (this->icanhaslightz) {
+        glEnable(GL_LIGHTING);
+        if (num_lights > 8) num_lights = 8; //make sure we don't have too many lights
 
+        for (size_t i=0; i < num_lights; i++) {
+            if (si.lights[i]->getType() == kOmniLightInfo) {
+                plOmniLightInfo* l_info = plOmniLightInfo::Convert(si.lights[i]->getObj());
+                GLfloat light_position[] = { l_info->getWorldToLight()(3,0), l_info->getWorldToLight()(3,0), l_info->getWorldToLight()(3,0), 1.0 };
+                GLfloat ambientColor[] = {l_info->getAmbient().r,l_info->getAmbient().g,l_info->getAmbient().b};
+                GLfloat diffuseColor[] = {l_info->getDiffuse().r,l_info->getDiffuse().g,l_info->getDiffuse().b};
+                GLfloat specularColor[] = {l_info->getSpecular().r,l_info->getSpecular().g,l_info->getSpecular().b};
+
+
+                glLightfv(GL_LIGHT0+i, GL_AMBIENT,  ambientColor);
+                glLightfv(GL_LIGHT0+i, GL_DIFFUSE, diffuseColor);
+                glLightfv(GL_LIGHT0+i, GL_SPECULAR, specularColor);
+
+                glLightf(GL_LIGHT0+i, GL_CONSTANT_ATTENUATION,  l_info->getAttenConst());
+                glLightf(GL_LIGHT0+i, GL_LINEAR_ATTENUATION,  l_info->getAttenLinear());
+                glLightf(GL_LIGHT0+i, GL_QUADRATIC_ATTENUATION, l_info->getAttenQuadratic());
+
+                glLightfv(GL_LIGHT0+i, GL_POSITION, light_position);
+                glEnable(GL_LIGHT0+i);
+            }
+        }
+    }
+    //Render the span
     glPushMatrix();
-    glMultMatrixf(glMatrix44_from_hsMatrix44(span->getWorldToLocal()));
-
+    glMultMatrixf(span->getWorldToLocal().glMatrix());
     hsGMaterial* material = hsGMaterial::Convert(dspans->getMaterial(span->getMaterialIdx())->getObj());
     for (size_t i=0; i < material->getNumLayers(); i++) {
         plLayerInterface* layer = plLayerInterface::Convert(material->getLayer(i)->getObj());
@@ -251,6 +281,13 @@ void plglRenderer::RenderSpan(plIcicle* span, plDrawableSpans* dspans) {
         glDisableClientState(GL_NORMAL_ARRAY);
     }
     glPopMatrix();
+    if (this->icanhaslightz) {
+        //disable lights
+        for (size_t i=0; i< num_lights; i++) {
+            glDisable(GL_LIGHT0+i);
+        }
+        glDisable(GL_LIGHTING);
+    }
 }
 
 void plglRenderer::SetSpanKeys() {

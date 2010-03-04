@@ -24,7 +24,6 @@ plglClient::plglClient(const char *startage) {
 }
 
 void plglClient::InitDisplay() {
-    SDL_Event event;
     SDL_VideoInfo *sdlVideoInfo;
     SDL_Surface *screen;
     Uint32 sdlVideoFlags = SDL_OPENGL;
@@ -68,6 +67,11 @@ void plglClient::ProcessEvents(Uint32 timefactor) {
                 case SDLK_z:
                     camera.moveLocalY(-1.0);
                     break;
+                case SDLK_l:
+                    if (renderer->icanhaslightz)
+                        renderer->icanhaslightz = false;
+                    else if (!renderer->icanhaslightz)
+                        renderer->icanhaslightz = true;
                 default:
                   break;
             }
