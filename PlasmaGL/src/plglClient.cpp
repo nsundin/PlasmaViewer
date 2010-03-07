@@ -64,7 +64,7 @@ void plglClient::ProcessEvents(Uint32 timefactor) {
                 case SDLK_x:
                     camera.moveLocalY(1.0);
                     break;
-                case SDLK_z:
+            case SDLK_z:
                     camera.moveLocalY(-1.0);
                     break;
                 case SDLK_l:

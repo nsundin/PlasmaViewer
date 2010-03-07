@@ -2,8 +2,8 @@
 
 #ifdef WIN32
   #include <GL/wglext.h>
-//#else
-//  #include <GL/glxext.h>
+#else
+  #include <GL/glxext.h>
 #endif
 
 #define GBRA2RGBA(val) \

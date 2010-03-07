@@ -3,13 +3,12 @@
 
 #include <SDL.h>
 
-#if WIN32
 #include <SDL_opengl.h>
-#else
-#include <GL/glext.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glx.h>
+#ifndef WIN32
+    #include <GL/glext.h>
+    #include <GL/gl.h>
+    #include <GL/glu.h>
+    #include <GL/glx.h>
 #endif
 
 
