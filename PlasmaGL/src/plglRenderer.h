@@ -3,14 +3,14 @@
 
 #include <SDL.h>
 
-#if WIN32;
+#if WIN32
 #include <SDL_opengl.h>
-#else;
+#else
 #include <GL/glext.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#endif;
+#endif
 
 
 #include "ResManager/plResManager.h"
