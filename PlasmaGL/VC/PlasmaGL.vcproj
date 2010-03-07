@@ -124,6 +124,7 @@
 				BrowseInformation="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4244;4251"
 				ForcedIncludeFiles=""
 			/>
 			<Tool

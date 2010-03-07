@@ -6,8 +6,8 @@
 //  #include <GL/glxext.h>
 #endif
 
-#define BGRA2RGBA(val) \
-    ((val & 0x000000FF) << 16 | (val & 0x00FF0000) >> 16 | (val & 0xFF00FF00))
+#define GBRA2RGBA(val) \
+    ((val & 0x0000FFFF) << 8 | (val & 0x00FF0000) >> 16 | (val & 0xFF000000))
 
 PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB = NULL;
 
@@ -143,7 +143,7 @@ void plglRenderer::FixAllVBuffers(plDrawableSpans* dspans) {
                 }
                 cp += (sizeof(float)*3); //normal
                 //fix the colors  GBRA > RGBA
-                *(unsigned int*)cp = BGRA2RGBA(*(unsigned int*)cp);//color
+                *(unsigned int*)cp = GBRA2RGBA(*(unsigned int*)cp);//color
                 cp += sizeof(unsigned int);
                 cp += sizeof(unsigned int);
                 for (size_t j=0; j<(size_t)(buff->getFormat() & plGBufferGroup::kUVCountMask); j++) {
@@ -256,6 +256,10 @@ void plglRenderer::RenderSpan(plIcicle* span, plDrawableSpans* dspans) {
     for (size_t i=0; i < material->getNumLayers(); i++) {
         plLayerInterface* layer = plLayerInterface::Convert(material->getLayer(i)->getObj());
         SetLayerParams(layer, false);
+        glMatrixMode(GL_TEXTURE);
+        glPushMatrix();
+        glMultMatrixf(layer->getTransform().glMatrix());
+        glMatrixMode(GL_MODELVIEW);
 
         glEnableClientState(GL_NORMAL_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
@@ -264,7 +268,7 @@ void plglRenderer::RenderSpan(plIcicle* span, plDrawableSpans* dspans) {
 
         glNormalPointer(GL_FLOAT, si.buff_stride, (GLvoid*)(si.cpstart+si.normalsoffset));
         glColorPointer(4, GL_UNSIGNED_BYTE, si.buff_stride, (GLvoid*)(si.cpstart+si.coloroffset));
-        glTexCoordPointer(3, GL_FLOAT,si.buff_stride, (GLvoid*)(si.cpstart+si.uvoffset)); //+(sizeof(float)*layer->getUVWSrc())
+        glTexCoordPointer(3, GL_FLOAT,si.buff_stride, (GLvoid*)(si.cpstart+si.uvoffset));//+(sizeof(float)*(layer->getUVWSrc() & plLayerInterface::kUVWIdxMask)))); //crazy insanity
         glVertexPointer(3, GL_FLOAT, si.buff_stride, (GLvoid*)si.cpstart);
 
 
@@ -279,6 +283,10 @@ void plglRenderer::RenderSpan(plIcicle* span, plDrawableSpans* dspans) {
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisableClientState(GL_COLOR_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
+
+        glMatrixMode(GL_TEXTURE);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
     }
     glPopMatrix();
     if (this->icanhaslightz) {
